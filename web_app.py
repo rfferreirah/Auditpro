@@ -193,21 +193,29 @@ def test_connection():
         project_id = None
         
         if user_id:
-            project_id = db.save_project(
-                user_id=user_id,
-                project_title=project_info.get('project_title', 'Projeto REDCap'),
-                api_url=api_url,
-                redcap_project_id=project_info.get('project_id'),
-                is_longitudinal=project_info.get('is_longitudinal', False),
-                token=token
-            )
+            # Salva projeto de forma não-bloqueante (erro no DB não impede o teste)
+            try:
+                project_id = db.save_project(
+                    user_id=user_id,
+                    project_title=project_info.get('project_title', 'Projeto REDCap'),
+                    api_url=api_url,
+                    redcap_project_id=project_info.get('project_id'),
+                    is_longitudinal=project_info.get('is_longitudinal', False),
+                    token=token
+                )
+            except Exception as db_error:
+                print(f"[WARN] Erro ao salvar projeto no banco (não crítico): {db_error}", flush=True)
+                project_id = None
             context_update['project_id'] = project_id
             
             # Atualiza cache seguro
         if user_id:
             session['api_url'] = api_url
             session['api_token'] = api_token
-            update_analysis_context(user_id, context_update)
+            try:
+                update_analysis_context(user_id, context_update)
+            except Exception as cache_error:
+                print(f"[WARN] Erro ao atualizar cache (não crítico): {cache_error}", flush=True)
             
         return jsonify({
             'success': True,
