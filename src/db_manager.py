@@ -23,12 +23,10 @@ class DBManager:
         if token:
             # Create a localized client for this request to respect RLS
             # Using headers to pass the JWT
-            from supabase.lib.client_options import ClientOptions
-            return create_client(
-                self.url, 
-                self.key, 
-                options=ClientOptions(headers={"Authorization": f"Bearer {token}"})
-            )
+            # Fix: Avoid ClientOptions due to library version mismatch
+            new_client = create_client(self.url, self.key)
+            new_client.postgrest.auth(token)
+            return new_client
         return self.client
 
     def save_project(self, user_id, project_title, api_url, redcap_project_id=None, is_longitudinal=False, token=None):
