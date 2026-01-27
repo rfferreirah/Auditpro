@@ -203,8 +203,10 @@ def test_connection():
             )
             context_update['project_id'] = project_id
             
-        # Atualiza cache seguro
+            # Atualiza cache seguro
         if user_id:
+            session['api_url'] = api_url
+            session['api_token'] = api_token
             update_analysis_context(user_id, context_update)
             
         return jsonify({
@@ -942,11 +944,20 @@ def get_project_fields():
                 'fields': ctx.get('fields_with_labels')
             })
         
-        # Use client from context
+        # Use client from context or reconstruct from session
         client = ctx.get('client') if ctx else None
         
         if not client:
-            return jsonify({'success': False, 'error': 'Conexão não estabelecida. Teste a conexão primeiro.'}), 400
+            api_url = session.get('api_url')
+            api_token = session.get('api_token')
+            if api_url and api_token:
+                try:
+                    client = REDCapClient(api_url, api_token)
+                except Exception as e:
+                    print(f"Error reconstructing client: {e}")
+            
+        if not client:
+            return jsonify({'success': False, 'error': 'Conexão não estabelecida ou expirada. Teste a conexão novamente.'}), 400
         
         # Fetch metadata
         metadata = client.export_metadata()
