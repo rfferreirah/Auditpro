@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "id": "rule_1c5533b9",
+      "name": "Faixa Etária Permitida",
+      "rule_type": "range",
+      "field": "age",
+      "operator": "",
+      "value": {
+        "min": 18,
+        "max": 65
+      },
+      "priority": "Alta",
+      "message": "A idade deve estar entre 18 e 65 anos",
+      "enabled": true,
+      "field2": null,
+      "created_at": "2026-01-24T23:19:54.262898",
+      "updated_at": "2026-01-24T23:20:03.142613"
+    }
+  ],
+  "version": "1.0"
+}

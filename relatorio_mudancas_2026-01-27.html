@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Consolidado de Atualizações (26-27/01) - REDCap IQ</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #334155;
+            --accent: #10b981;
+            --highlight: #3b82f6;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            border-bottom: 3px solid var(--accent);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 2rem;
+            transition: transform 0.2s;
+        }
+
+        section:hover {
+            transform: translateY(-2px);
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+        }
+
+        ul {
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.75rem;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tag-ai {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .tag-ui {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .tag-fix {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .tag-feat {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div>
+            <h1>Relatório de Evolução do Sistema</h1>
+            <div class="subtitle">Atualizações acumuladas: 26 e 27 de Janeiro de 2026</div>
+        </div>
+        <div style="text-align: right; color: var(--secondary);">
+            <strong>Versão:</strong> 1.2.0<br>
+            <strong>Status:</strong> Estável
+        </div>
+    </header>
+
+    <section>
+        <h2><span class="tag tag-ai">AI Engine</span> Motor de Inteligência e Regras</h2>
+        <p>Otimizações profundas no núcleo de análise para garantir precisão e flexibilidade.</p>
+
+        <h3>1. Ajuste Crítico no Fluxo de Regras (Smart Rules)</h3>
+        <ul>
+            <li><strong>Implementação:</strong> Ajustamos o <code>QueryGenerator</code> para aceitar dinamicamente a
+                lista de verificações ativas (<code>active_checks</code>) enviadas pelo frontend.</li>
+            <li><strong>Correção:</strong> Solucionamos um problema onde checkboxes de seleção de regras padrão (Campos
+                Obrigatórios, Range, etc.) eram ignorados pelo motor. Agora, a análise é estritamente baseada no que o
+                usuário seleciona.</li>
+            <li><strong>Impacto:</strong> Maior controle do usuário sobre o escopo da auditoria.</li>
+        </ul>
+
+        <h3>2. Análise Estrutural Nativa</h3>
+        <ul>
+            <li><strong>Novos Checks:</strong> Integração completa do <code>StructuralAnalyzer</code> para detectar:
+                <ul>
+                    <li>Campos obrigatórios vazios.</li>
+                    <li>Valores fora do range definido no Data Dictionary.</li>
+                    <li>Formatos inválidos (datas, números, e-mails).</li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2><span class="tag tag-ui">Interface</span> Experiência do Usuário (UX/UI)</h2>
+        <p>Modernização completa da interface de relatórios para assemelhar-se a ferramentas de BI (Business
+            Intelligence).</p>
+
+        <h3>3. Filtros Avançados ("Excel-like")</h3>
+        <ul>
+            <li><strong>Dropdowns Inteligentes:</strong> Substituição da linha estática de filtros por ícones de funil
+                nos cabeçalhos das colunas.</li>
+            <li><strong>Data-Driven:</strong> Os filtros são populados dinamicamente com os valores únicos reais
+                presentes nos dados auditados (via endpoint <code>/api/filter-options</code>).</li>
+            <li><strong>Funcionalidades:</strong> Suporte a busca interna no dropdown e seleção múltipla (checkboxes)
+                com lógica "OR".</li>
+        </ul>
+
+        <h3>4. Refinamento Visual e CSS</h3>
+        <ul>
+            <li><strong>Display Limpo:</strong> Remoção da coluna "Modificação", que gerava ruído visual desnecessário.
+            </li>
+            <li><strong>Correção de Layout:</strong> Aumento da largura da coluna de ações para <code>240px</code>,
+                corrigindo o corte do botão "Verificar no REDCap".</li>
+            <li><strong>Feedback:</strong> Melhorias nos badges de prioridade e mensagens de status.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2><span class="tag tag-feat">Feature</span> Personalização e Identidade</h2>
+
+        <h3>5. Contexto do Usuário</h3>
+        <ul>
+            <li><strong>Reconhecimento:</strong> O sistema agora identifica o usuário logado via Supabase Auth.</li>
+            <li><strong>Interface:</strong> Saudação personalizada "Olá, [Nome]" na tela inicial.</li>
+            <li><strong>Rastreabilidade:</strong> Inclusão automática da linha "Gerado por: [Nome]" e timestamp nos
+                relatórios PDF exportados.</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>Gerado automaticamente pelo Agente de IA REDCap IQ.</p>
+        <p><em>Documento confidencial para uso interno da equipe de desenvolvimento.</em></p>
+    </footer>
+
+</body>
+
+</html>

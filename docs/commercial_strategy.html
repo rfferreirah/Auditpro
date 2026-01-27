@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estratégia Comercial - Audit PRO</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --accent-color: #0d9488;
+            /* Teal for money/business vibe */
+            --code-bg: #f0fdfa;
+            --border-color: #e2e8f0;
+            --card-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            background-color: var(--bg-primary);
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #0f172a;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 3rem;
+            color: var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            color: #334155;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .highlight-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .highlight-box strong {
+            color: var(--accent-color);
+        }
+
+        ul {
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .price-card {
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .price-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .price-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .price-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+
+        blockquote {
+            border-left: 4px solid #94a3b8;
+            margin: 1.5rem 0;
+            padding-left: 1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .script-box {
+            font-family: 'Courier New', monospace;
+            background-color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0f172a;
+                --text-primary: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --accent-color: #14b8a6;
+                --code-bg: #134e4a;
+                --border-color: #334155;
+                --card-bg: #1e293b;
+            }
+
+            .price-card {
+                background: linear-gradient(145deg, #1e293b, #0f172a);
+            }
+
+            .script-box {
+                background-color: #1e293b;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Estratégia Comercial: Audit PRO (SaaS)</h1>
+
+    <div class="highlight-box">
+        <p><strong>Desafio Central:</strong> "Meus usuários estão acostumados com ferramentas gratuitas (REDCap). Como
+            cobrar por isso?"</p>
+        <p>Este documento detalha como posicionar, precificar e vender o Audit PRO, transformando a mentalidade de
+            "ferramenta extra" para "investimento essencial".</p>
+    </div>
+
+    <h2>1. Quebrando a Objeção "O REDCap é Grátis"</h2>
+    <p>O REDCap é gratuito para a instituição, mas o <strong>tempo da equipe</strong> não é.</p>
+
+    <h3>Argumento 1: O Custo Invisível do Erro</h3>
+    <ul>
+        <li><strong>Narrativa:</strong> "O REDCap armazena os dados de graça. Mas quanto custa limpar esses dados?"</li>
+        <li><strong>Dados para usar:</strong> Um Monitor de Pesquisa (CRA) custa caro. Se ele passa 4 horas limpando
+            planilha de Excel para achar inconsistências que a IA acharia em 4 segundos, você está "queimando" orçamento
+            do estudo.</li>
+        <li><strong>Pitch:</strong> "Não vendemos armazenamento de dados. Vendemos horas de vida do seu monitor e a
+            segurança de que seu <em>paper</em> não será rejeitado por dados inconsistentes."</li>
+    </ul>
+
+    <h3>Argumento 2: Compliance e Auditoria (O Medo)</h3>
+    <ul>
+        <li><strong>Narrativa:</strong> "O que acontece se a ANVISA/FDA auditar seu estudo hoje?"</li>
+        <li><strong>Pitch:</strong> "Fazer queries manuais deixa rastros falhos. O Audit PRO gera um PDF com timestamp
+            inviolável de que os dados foram checados. É um seguro contra auditorias."</li>
+    </ul>
+
+    <h3>Argumento 3: A IA faz o que o REDCap não faz</h3>
+    <ul>
+        <li><strong>Diferencial Técnico:</strong> O REDCap tem Data Quality Rules, mas elas são "Burras" (lógica
+            simples).</li>
+        <li><strong>Pitch:</strong> "O REDCap consegue cruzar se a data de óbito bate com a visita 3? O REDCap entende
+            que uma PA de 300 é impossível? O Audit PRO entende contexto clínico, não apenas lógica matemática."</li>
+    </ul>
+
+    <h2>2. Modelos de Precificação (Pricing)</h2>
+    <p>Evite cobrar "por usuário" (pesquisadores odeiam isso pois as equipes mudam muito). Cobre pelo <strong>valor
+            gerado (Estudo)</strong>.</p>
+
+    <div class="price-card">
+        <div class="price-title">Modelo A: Freemium</div>
+        <div class="price-value">R$ 0 ou R$ 199/mês</div>
+        <p><strong>Ideal para Crescimento</strong></p>
+        <ul>
+            <li><strong>Free:</strong> 1 Estudo, até 500 registros, regras básicas.</li>
+            <li><strong>Pro:</strong> Estudos ilimitados, IA Custom Rules, PDF com Whitelabel (sem logo do Audit PRO),
+                Suporte Prioritário.</li>
+        </ul>
+        <p><em>Por que funciona: O pesquisador testa no estudo pequeno e faz upgrade via uso.</em></p>
+    </div>
+
+    <div class="price-card">
+        <div class="price-title">Modelo B: Pay-Per-Study (Recomendado)</div>
+        <div class="price-value">R$ 497,00 (Único)</div>
+        <p><strong>Ideal para Centros Acadêmicos</strong></p>
+        <ul>
+            <li>Taxa Única por Estudo (Lifetime)</li>
+        </ul>
+        <p><em>Por que funciona: Pesquisadores recebem "Verbas de Custeio" (Grants). É mais fácil passar um pagamento
+                único no cartão corporativo do que uma recorrência mensal.</em></p>
+    </div>
+
+    <div class="price-card">
+        <div class="price-title">Modelo C: Enterprise</div>
+        <div class="price-value">Sob Consulta (10k+)</div>
+        <p><strong>Para CROs e Hospitais</strong></p>
+        <ul>
+            <li>Contrato Anual</li>
+            <li>Instalação On-Premise ou Instância Dedicada</li>
+            <li>Controle total (LGPD/HIPAA)</li>
+        </ul>
+    </div>
+
+    <h2>3. Canais de Aquisição Além do LinkedIn</h2>
+
+    <h3>A. Parceria com Centros de Pesquisa</h3>
+    <p>Muitos centros usam REDCap. Ofereça uma licença "Enterprise/Partner" gratuita para o <strong>Centro de
+            Gerenciamento de Dados</strong> da instituição, em troca de eles recomendarem o uso para os pesquisadores
+        individuais.</p>
+
+    <h3>B. "Data Quality Checklist" (Lead Magnet)</h3>
+    <p>Crie um PDF simples: "O Checklist de 10 itens para validar antes de fechar seu banco de dados". No final do PDF:
+        "Fazer isso na mão demora 4 dias. Clique aqui para fazer em 4 minutos com Audit PRO." Distribua em grupos de
+        WhatsApp.</p>
+
+    <h3>C. Webinars Práticos "Ao Vivo"</h3>
+    <p>Título: "Limpando um banco de dados real do REDCap em 10 minutos". Mostre a tela, importe um banco sujo, e mostre
+        o resultado.</p>
+
+    <h2>4. Script de Vendas (Exemplo de DM/Email)</h2>
+
+    <div class="script-box">
+        <p><strong>Assunto:</strong> Uma dúvida sobre a validação do estudo [Nome do Estudo]</p>
+        <p>Olá [Nome], vi que você coordena o estudo X.</p>
+        <p>Como vocês estão fazendo a validação de consistência dos dados hoje? Estão exportando para Excel e checando
+            na mão?</p>
+        <p>Desenvolvi uma ferramenta que conecta direto no REDCap e faz essa "varredura" de inconsistências clínicas
+            (ex: datas impossíveis, valores fora do padrão) em segundos.</p>
+        <p>Se quiser, posso rodar um teste gratuito em uma cópia anonimizada do seu banco para te mostrar o que ele
+            encontra. Me avise se faz sentido.</p>
+        <p>Abraço,<br>[Seu Nome]</p>
+    </div>
+
+    <h2>Próximos Passos Recomendados</h2>
+    <ol>
+        <li>Definir qual modelo de preço faz mais sentido para o seu momento atual (sugestão: Começar com
+            <strong>Pay-Per-Study</strong>).</li>
+        <li>Criar uma Landing Page simples focada em "Economia de Tempo" e "Segurança".</li>
+        <li>Gravar o vídeo de demonstração "Ao Vivo" (Webinar/YouTube).</li>
+    </ol>
+
+</body>
+
+</html>

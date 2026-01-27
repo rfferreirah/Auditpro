@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Deploy na Nuvem - Audit PRO</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f9fafb;
+        }
+
+        .container {
+            background-color: white;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: #1a365d;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #2c5282;
+            margin-top: 30px;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 8px;
+        }
+
+        code {
+            background-color: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d53f8c;
+        }
+
+        pre {
+            background-color: #2d3748;
+            color: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        ul,
+        ol {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .note {
+            border-left: 4px solid #48bb78;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0fff4;
+            color: #2f855a;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            border-left: 4px solid #ed8936;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fffaf0;
+            color: #c05621;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.85em;
+            color: #a0aec0;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            a {
+                text-decoration: none;
+                color: black;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Guia de Deploy na Nuvem (Render / Railway)</h1>
+
+        <p>Este guia explica como colocar sua aplicação no ar gratuitamente (ou com baixo custo) usando
+            <strong>Render</strong> ou <strong>Railway</strong>. Ambos são excelentes opções que se conectam direto ao
+            seu GitHub.</p>
+
+        <h2>Pré-requisitos</h2>
+        <ol>
+            <li>Ter o código do projeto em um repositório no <strong>GitHub</strong>.</li>
+            <li>Ter o arquivo <code>Procfile</code> na raiz do projeto (este arquivo define como a nuvem inicia seu
+                app).</li>
+            <li>Ter o <code>requirements.txt</code> atualizado com a biblioteca <code>gunicorn</code>.</li>
+        </ol>
+
+        <h2>Opção 1: Deploy no Render (Plano Gratuito)</h2>
+        <p>O Render oferece um plano gratuito ("Free Tier") excelente para projetos pessoais.</p>
+
+        <ol>
+            <li>Crie uma conta em <a href="https://render.com">render.com</a>.</li>
+            <li>Clique em <strong>"New +"</strong> e selecione <strong>"Web Service"</strong>.</li>
+            <li>Conecte sua conta do GitHub e selecione o repositório deste projeto.</li>
+            <li>Preencha os campos de configuração:
+                <ul>
+                    <li><strong>Name:</strong> <code>audit-pro</code> (ou o nome que preferir)</li>
+                    <li><strong>Region:</strong> Escolha a mais próxima (ex: Ohio ou Frankfurt)</li>
+                    <li><strong>Branch:</strong> <code>main</code></li>
+                    <li><strong>Runtime:</strong> <code>Python 3</code></li>
+                    <li><strong>Build Command:</strong> <code>pip install -r requirements.txt</code></li>
+                    <li><strong>Start Command:</strong> <code>gunicorn web_app:app</code></li>
+                </ul>
+            </li>
+            <li><strong>Configuração de Ambiente (Environment Variables):</strong>
+                <p>Role até a seção "Environment Variables" e adicione as chaves:</p>
+                <ul>
+                    <li><code>REDCAP_API_URL</code>: (Sua URL do REDCap)</li>
+                    <li><code>REDCAP_API_TOKEN</code>: (Seu Token)</li>
+                    <li><code>PYTHON_VERSION</code>: <code>3.10.0</code> (Recomendado)</li>
+                </ul>
+            </li>
+            <li>Clique em <strong>"Create Web Service"</strong>.</li>
+        </ol>
+
+        <div class="note">
+            <strong>Sucesso:</strong> O deploy levará alguns minutos. Ao final, o Render fornecerá uma URL pública (ex:
+            <code>https://audit-pro.onrender.com</code>).
+        </div>
+
+        <h2>Opção 2: Deploy no Railway</h2>
+        <p>O Railway é conhecido pela simplicidade e robustez. Geralmente oferece um período de teste ou créditos
+            iniciais.</p>
+
+        <ol>
+            <li>Crie uma conta em <a href="https://railway.app">railway.app</a>.</li>
+            <li>Clique em <strong>"New Project"</strong> -> <strong>"Deploy from GitHub repo"</strong>.</li>
+            <li>Selecione o repositório do projeto.</li>
+            <li>Clique no projeto criado e navegue até a aba <strong>"Variables"</strong>.</li>
+            <li>Adicione as variáveis do seu arquivo <code>.env</code>:
+                <ul>
+                    <li><code>REDCAP_API_URL</code></li>
+                    <li><code>REDCAP_API_TOKEN</code></li>
+                </ul>
+            </li>
+            <li>Vá em <strong>"Settings"</strong> -> <strong>"Generate Domain"</strong> para criar uma URL pública
+                acessível.</li>
+            <li>O Railway detectará automaticamente o arquivo <code>Procfile</code> e iniciará o deploy.</li>
+        </ol>
+
+        <h2>Dicas Importantes para Nuvem</h2>
+
+        <div class="warning">
+            <strong>Segurança (HTTPS e Dados):</strong>
+            <ul>
+                <li>Tanto Render quanto Railway configuram <strong>HTTPS</strong> automaticamente.</li>
+                <li><strong>NUNCA</strong> suba seu arquivo <code>.env</code> para o GitHub. Use sempre o painel da
+                    plataforma para configurar as variáveis de ambiente.</li>
+            </ul>
+        </div>
+
+        <p><strong>Sobre Arquivos (PDFs):</strong> Em planos gratuitos ou arquiteturas modernas de nuvem, o sistema de
+            arquivos é "efêmero". Isso significa que arquivos criados na pasta <code>outputs/</code> podem desaparecer
+            se o servidor reiniciar. Para este projeto (gerar e baixar PDF na hora), isso não é um problema. Se precisar
+            de armazenamento permanente, considere usar um serviço como AWS S3 ou Google Cloud Storage.</p>
+
+        <div class="footer">
+            Gerado automaticamente por Audit PRO Agent - 2025
+        </div>
+    </div>
+</body>
+
+</html>

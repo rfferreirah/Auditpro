@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conta Confirmada - Audit PRO</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-body);
+        }
+
+        .confirm-card {
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success), #10b981);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .success-icon i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .error-icon {
+            background: linear-gradient(135deg, var(--danger), #f87171);
+        }
+
+        .pending-icon {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .confirm-title {
+            font-size: 1.75rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .confirm-message {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .logo-small {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card confirm-card animate-fade-in">
+        {% if status == 'success' %}
+        <div class="success-icon">
+            <i class="ph ph-check-circle"></i>
+        </div>
+        <h1 class="confirm-title">Conta Confirmada!</h1>
+        <p class="confirm-message">
+            Sua conta foi ativada com sucesso. Agora você pode acessar todos os recursos do Audit PRO para
+            garantir a qualidade dos seus dados no REDCap.
+        </p>
+        <a href="{{ url_for('login') }}" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            <i class="ph ph-sign-in"></i> Fazer Login
+        </a>
+
+        {% elif status == 'error' %}
+        <div class="success-icon error-icon">
+            <i class="ph ph-x-circle"></i>
+        </div>
+        <h1 class="confirm-title">Erro na Confirmação</h1>
+        <p class="confirm-message">
+            {{ message or 'Não foi possível confirmar sua conta. O link pode ter expirado ou já foi utilizado.' }}
+        </p>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+            <i class="ph ph-arrow-left"></i> Tentar Novamente
+        </a>
+
+        {% else %}
+        <div class="success-icon pending-icon">
+            <i class="ph ph-hourglass-medium"></i>
+        </div>
+        <h1 class="confirm-title">Verificando...</h1>
+        <p class="confirm-message">
+            Aguarde enquanto verificamos sua conta.
+        </p>
+        {% endif %}
+
+        <div class="logo-small">Audit PRO</div>
+    </div>
+
+    <script>
+        // Apply saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
+</body>
+
+</html>

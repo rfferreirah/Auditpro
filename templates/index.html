@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit PRO</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Custom Scrollbar for Black Theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Progress Bar Styles */
+        #analysisProgressContainer {
+            margin-top: 1.5rem;
+            display: none;
+            width: 100%;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary) 0%, #4facfe 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        /* Animated stripes effect */
+        .progress-bar-fill::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(45deg,
+                    rgba(255, 255, 255, 0.15) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    rgba(255, 255, 255, 0.15) 75%,
+                    transparent 75%,
+                    transparent);
+            background-size: 1rem 1rem;
+            animation: progress-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-stripes {
+            from {
+                background-position: 1rem 0;
+            }
+
+            to {
+                background-position: 0 0;
+            }
+        }
+
+        /* Action Column Fix */
+        .query-table th:last-child,
+        .query-table td:last-child {
+            width: 240px;
+            min-width: 240px;
+            text-align: center;
+            white-space: nowrap;
+            padding-right: 1rem;
+        }
+
+        .query-table-container {
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+        }
+
+
+        .filter-input {
+            width: 100%;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .user-greeting {
+            margin-right: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Filter Popovers */
+        .th-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .filter-icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .filter-icon-btn:hover,
+        .filter-icon-btn.active {
+            color: var(--primary);
+            background: var(--bg-secondary);
+        }
+
+        .filter-popover {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem;
+            border-radius: 6px;
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+
+        .filter-popover.show {
+            display: block;
+        }
+
+        .popover-search {
+            width: 100%;
+            padding: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .popover-options {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 4px;
+        }
+
+        .popover-options label {
+            display: flex;
+            align-items: center;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .popover-options label:hover {
+            background: var(--bg-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Audit PRO</h1>
+            <p>Análise automatizada de qualidade de dados para estudos clínicos</p>
+            <div class="header-actions">
+                {% if user_name %}
+                <span class="user-greeting">Olá, <strong>{{ user_name }}</strong></span>
+                {% endif %}
+                <button id="themeToggleBtn" class="btn btn-secondary" title="Alternar Tema">
+                    <i class="ph ph-sun" style="font-size: 1.2rem;"></i>
+                </button>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary" title="Sair">
+                    <i class="ph ph-sign-out" style="font-size: 1.2rem;"></i>
+                </a>
+            </div>
+        </header>
+
+        <script>
+            // Theme Logic
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            const html = document.documentElement;
+
+            // Check saved preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                themeToggleBtn.innerHTML = '<i class="ph ph-moon" style="font-size: 1.2rem;"></i>';
+            } else {
+                html.removeAttribute('data-theme'); // Default is dark
+                themeToggleBtn.innerHTML = '<i class="ph ph-sun" style="font-size: 1.2rem;"></i>';
+            }
+
+            // Toggle Handler
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                if (currentTheme === 'light') {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'dark');
+                    themeToggleBtn.innerHTML = '<i class="ph ph-sun" style="font-size: 1.2rem;"></i>';
+                } else {
+                    html.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    themeToggleBtn.innerHTML = '<i class="ph ph-moon" style="font-size: 1.2rem;"></i>';
+                }
+            });
+        </script>
+
+        <!-- Stepper Guide -->
+        <div class="stepper-container">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                Configurar
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                Testar
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                Regras
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                Analisar
+            </div>
+        </div>
+
+        <!-- Connection Card -->
+        <div class="card">
+            <h2 class="card-title"><i class="ph ph-plugs" style="color: var(--primary);"></i> Configuração da API</h2>
+
+            <div class="info-box">
+                <i class="ph ph-lightbulb" style="font-size: 1.1rem;"></i> Para obter o Token da API, acesse seu projeto
+                no REDCap → API → Request/Revoke API Token
+            </div>
+
+            <form id="connectionForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="apiUrl">URL da API REDCap</label>
+                        <input type="url" id="apiUrl" placeholder="https://redcap.sua-instituicao.com/api/" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiToken">Token da API</label>
+                        <input type="password" id="apiToken" placeholder="Seu token de API do projeto" required>
+                    </div>
+                </div>
+
+                <div class="checkbox-group" style="margin-bottom: 1.5rem;">
+                    <input type="checkbox" id="includeLogs">
+                    <label for="includeLogs" style="margin: 0; color: var(--text-primary);">
+                        Incluir análise de logs de auditoria (opcional)
+                    </label>
+                </div>
+
+                <div class="form-actions" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+
+                    <!-- Buttons Container -->
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <button type="button" id="testBtn" class="btn btn-primary">
+                            <span class="spinner" id="testSpinner"></span>
+                            2. Testar Conexão
+                        </button>
+
+                        <button type="button" id="openRulesBtn" class="btn btn-secondary" style="display: none;">
+                            <i class="ph ph-gear"></i> 3. Regras Customizadas
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Structural Checks -->
+                    <details class="structural-checks-dropdown"
+                        style="background: var(--bg-secondary); border-radius: 0.5rem; border: 1px solid var(--border); margin-top: 0.5rem;">
+                        <summary
+                            style="padding: 0.8rem 1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; user-select: none;">
+                            <i class="ph ph-checks" style="color: var(--primary);"></i> Verificações Estruturais
+                            (Nativas)
+                            <i class="ph ph-caret-down" style="margin-left: auto;"></i>
+                        </summary>
+                        <div
+                            style="padding: 0 1rem 1rem 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem; border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                title="Identifica campos marcados como obrigatórios no REDCap que estão em branco no registro.">
+                                <input type="checkbox" id="checkRequired" checked> Campos Obrigatórios Vazios
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                title="Verifica se valores numéricos ou datas estão fora dos limites mínimo e máximo definidos no Dicionário de Dados.">
+                                <input type="checkbox" id="checkRange" checked> Valores Fora do Range
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                title="Valida se o texto inserido respeita o formato esperado (ex: datas inválidas, e-mails incorretos, números com formatação errada).">
+                                <input type="checkbox" id="checkFormat" checked> Formatos Inválidos
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                title="Confere se as opções selecionadas (em radios/dropdowns) correspondem aos códigos válidos definidos no projeto.">
+                                <input type="checkbox" id="checkChoices" checked> Opções Inválidas
+                            </label>
+                        </div>
+                    </details>
+
+                    <button type="button" id="analyzeBtn" class="btn btn-success btn-lg" disabled
+                        style="display: none; width: 100%; justify-content: center; margin-top: 0.5rem;">
+                        <span class="spinner" id="analyzeSpinner"></span>
+                        <i class="ph ph-lightning" style="margin-right: 0.5rem;"></i> 4. Executar Análise
+                    </button>
+                </div>
+            </form>
+
+            <!-- Progress Bar (Initially Hidden) -->
+            <div id="analysisProgressContainer">
+                <div class="progress-label">
+                    <span id="progressText">Inicializando...</span>
+                    <span id="progressPercentage">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">
+                    <i class="ph ph-info"></i> Isso pode levar alguns minutos dependendo do tamanho do projeto.
+                </div>
+            </div>
+
+            <div id="connectionStatus" class="status"></div>
+        </div>
+
+
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+
+            <!-- Summary Stats -->
+            <div class="card">
+                <h2 class="card-title"><i class="ph ph-chart-bar" style="color: var(--primary);"></i> Resumo da Análise
+                </h2>
+                <p id="projectName" style="color: var(--text-secondary); margin-bottom: 1rem;"></p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value total" id="totalRecords">0</div>
+                        <div class="stat-label">Participantes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value total" id="totalQueries">0</div>
+                        <div class="stat-label">Pendências Totais</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value high" id="highPriority">0</div>
+                        <div class="stat-label">Alta Prioridade</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value medium" id="mediumPriority">0</div>
+                        <div class="stat-label">Média Prioridade</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value low" id="lowPriority">0</div>
+                        <div class="stat-label">Baixa Prioridade</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Tipos de Erro Mais Comuns</h4>
+                        <ul class="error-list" id="errorList"></ul>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Campos com Mais Problemas</h4>
+                        <ul class="field-list" id="fieldList"></ul>
+                    </div>
+                </div>
+
+                <div class="download-section">
+                    <button id="downloadPdf" class="btn btn-success">
+                        <i class="ph ph-file-pdf" style="font-size: 1.2rem;"></i> Download PDF
+                    </button>
+                    <button id="downloadJson" class="btn btn-secondary">
+                        <i class="ph ph-file-code" style="font-size: 1.2rem;"></i> Download JSON
+                    </button>
+                </div>
+            </div>
+
+            <!-- Queries Table -->
+            <div class="card" style="padding: 1rem;">
+                <h2 class="card-title" style="margin-bottom: 0.5rem; font-size: 1.1rem;"><i
+                        class="ph ph-magnifying-glass" style="color: var(--primary);"></i> Pendências
+                    Identificadas <span id="queryCount" style="color: var(--text-secondary); font-weight: 400;"></span>
+                </h2>
+
+                <!-- Filtros e Paginação -->
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                    <div class="btn-group" id="priorityFilters" style="gap: 0.25rem;">
+                        <button class="btn btn-secondary active" data-filter="all"
+                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Todas</button>
+                        <button class="btn btn-secondary" data-filter="Alta"
+                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🔴 Alta</button>
+                        <button class="btn btn-secondary" data-filter="Média"
+                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🟡 Média</button>
+                        <button class="btn btn-secondary" data-filter="Baixa"
+                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🟢 Baixa</button>
+                    </div>
+
+                    <div style="position: relative; width: 140px;">
+                        <i class="ph ph-magnifying-glass"
+                            style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.85rem;"></i>
+                        <input type="text" id="querySearchInput" placeholder="Buscar..."
+                            style="padding-left: 1.8rem; margin-bottom: 0; height: 30px; font-size: 0.8rem; border-radius: 6px;">
+                    </div>
+
+                    <select id="pageSizeSelect" class="form-control"
+                        style="width: auto; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 0.8rem; height: 30px;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50" selected>50</option>
+                        <option value="100">100</option>
+                        <option value="1000000">Todas</option>
+                    </select>
+
+                    <div id="paginationControls" style="display: flex; align-items: center; gap: 0.3rem;">
+                        <button id="prevPage" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">«</button>
+                        <span id="pageInfo" style="color: var(--text-secondary); font-size: 0.8rem;">1/1</span>
+                        <button id="nextPage" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">»</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="query-table-container">
+                <table class="query-table">
+                    <thead>
+                        <tr>
+                            <!-- ID -->
+                            <th>
+                                <div class="th-content">
+                                    ID
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <input type="text" class="popover-search" placeholder="Buscar..."
+                                            onkeyup="filterOptions(this)">
+                                        <div class="popover-options" data-col="record_id">Carregando...</div>
+                                        <input type="hidden" class="filter-input" data-col="record_id">
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- Event -->
+                            <th>
+                                <div class="th-content">
+                                    Evento
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <input type="text" class="popover-search" placeholder="Buscar..."
+                                            onkeyup="filterOptions(this)">
+                                        <div class="popover-options" data-col="event_id">Carregando...</div>
+                                        <input type="hidden" class="filter-input" data-col="event_id">
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- Campo -->
+                            <th>
+                                <div class="th-content">
+                                    Campo
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <input type="text" class="popover-search" placeholder="Buscar..."
+                                            onkeyup="filterOptions(this)">
+                                        <div class="popover-options" data-col="field">Carregando...</div>
+                                        <input type="hidden" class="filter-input" data-col="field">
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- Valor -->
+                            <th>
+                                <div class="th-content">
+                                    Valor
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <input type="text" class="popover-search" placeholder="Buscar..."
+                                            onkeyup="filterOptions(this)">
+                                        <div class="popover-options" data-col="value">Carregando...</div>
+                                        <input type="hidden" class="filter-input" data-col="value">
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- Tipo de Erro (Mantendo visual antigo para este específico ou migrando? Migrando para consistência) -->
+                            <th>
+                                <div class="th-content">
+                                    Tipo de Erro
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <div class="popover-options" data-col="issue_type">
+                                            <!-- Opções estáticas ou dinâmicas -->
+                                            <label><input type="checkbox" value="required_field_empty"
+                                                    onchange="updateHiddenInput(this)"> Obrigatório</label>
+                                            <label><input type="checkbox" value="field_out_of_range"
+                                                    onchange="updateHiddenInput(this)"> Range</label>
+                                            <label><input type="checkbox" value="invalid_format"
+                                                    onchange="updateHiddenInput(this)"> Formato</label>
+                                            <label><input type="checkbox" value="invalid_choice"
+                                                    onchange="updateHiddenInput(this)"> Opção</label>
+                                            <label><input type="checkbox" value="custom_rule_violation"
+                                                    onchange="updateHiddenInput(this)"> Custom</label>
+                                        </div>
+                                        <input type="hidden" class="filter-input" data-col="issue_type">
+                                    </div>
+                                </div>
+                            </th>
+                            <!-- Prioridade -->
+                            <th>
+                                <div class="th-content">
+                                    Prioridade
+                                    <button class="filter-icon-btn" onclick="toggleFilter(this)"><i
+                                            class="ph ph-funnel"></i></button>
+                                    <div class="filter-popover" onclick="event.stopPropagation()">
+                                        <div class="popover-options" data-col="priority">
+                                            <label><input type="checkbox" value="Alta"
+                                                    onchange="updateHiddenInput(this)"> Alta</label>
+                                            <label><input type="checkbox" value="Média"
+                                                    onchange="updateHiddenInput(this)"> Média</label>
+                                            <label><input type="checkbox" value="Baixa"
+                                                    onchange="updateHiddenInput(this)"> Baixa</label>
+                                        </div>
+                                        <input type="hidden" class="filter-input" data-col="priority">
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="text-align: center; width: 240px;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queryTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação inferior -->
+            <div id="paginationBottom"
+                style="display: flex; justify-content: center; align-items: center; gap: 0.4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button id="prevPageBottom" class="btn btn-secondary"
+                    style="padding: 0.4rem 0.7rem; font-size: 0.9rem;">«</button>
+                <span id="pageInfoBottom" style="color: var(--text-secondary); font-size: 0.85rem;">1/1</span>
+                <button id="nextPageBottom" class="btn btn-secondary"
+                    style="padding: 0.4rem 0.7rem; font-size: 0.9rem;">»</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rulesModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="ph ph-gear-six" style="color: var(--primary);"></i> Regras Customizadas</h2>
+                <button class="modal-close" id="closeRulesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Rules List -->
+                <div id="rulesListView">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: var(--text-secondary);">Suas Regras</h3>
+                        <button id="newRuleBtn" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                            <i class="ph ph-plus"></i> Nova Regra
+                        </button>
+                    </div>
+                    <div id="rulesList" class="rules-list">
+                        <div class="empty-state">Nenhuma regra criada ainda.</div>
+                    </div>
+                </div>
+
+                <!-- Rule Form -->
+                <div id="ruleFormView" style="display: none;">
+                    <button id="backToListBtn" class="btn btn-secondary"
+                        style="margin-bottom: 1rem; padding: 0.4rem 0.8rem;">← Voltar</button>
+
+                    <!-- Magic Rule Section -->
+                    <!-- Magic Rule Section -->
+                    <div class="card card-magic">
+                        <h3 class="text-magic" style="margin-bottom: 1rem; font-size: 1.1rem;">
+                            <i class="ph ph-magic-wand"></i> Regra Mágica (IA)
+                        </h3>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="label-magic">Descreva a regra em linguagem natural:</label>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <input type="text" id="magicRuleInput" class="input-magic"
+                                    placeholder="Ex: A idade deve ser maior que 18 anos" style="flex: 1;">
+                                <button type="button" id="generateRuleBtn" class="btn btn-magic">
+                                    <i class="ph ph-sparkle"></i> Gerar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="ruleForm">
+                        <input type="hidden" id="ruleId">
+                        <div class="form-group">
+                            <label for="ruleName">Nome da Regra *</label>
+                            <input type="text" id="ruleName" placeholder="Ex: Idade mínima do estudo" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ruleType">Tipo de Regra</label>
+                                <select id="ruleType">
+                                    <option value="comparison">Comparação Simples</option>
+                                    <option value="range">Range (Min/Max)</option>
+                                    <option value="cross_field">Comparação entre Campos</option>
+                                    <option value="regex">Expressão Regular</option>
+                                    <option value="condition">Condicional (SE-ENTÃO)</option>
+                                    <option value="uniqueness">Unicidade (Sem Duplicatas)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="rulePriority">Prioridade</label>
+                                <select id="rulePriority">
+                                    <option value="Alta">Alta</option>
+                                    <option value="Média" selected>Média</option>
+                                    <option value="Baixa">Baixa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ruleField">Campo *</label>
+                            <select id="ruleField" required>
+                                <option value="">Selecione um campo...</option>
+                                <!-- Options populated via JS -->
+                            </select>
+                            <input type="text" id="ruleFieldSearch" placeholder="Buscar campo..."
+                                style="margin-top: 0.5rem; display: none;">
+                        </div>
+                        <div id="ruleField2Group" class="form-group" style="display: none;">
+                            <label for="ruleField2">Segundo Campo (para comparação)</label>
+                            <select id="ruleField2">
+                                <option value="">Selecione um campo...</option>
+                                <!-- Options populated via JS -->
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ruleOperator">Operador</label>
+                                <select id="ruleOperator">
+                                    <option value="=">= (igual)</option>
+                                    <option value="!=">!= (diferente)</option>
+                                    <option value="<">
+                                        < (menor que)</option>
+                                    <option value=">">
+                                        > (maior que)</option>
+                                    <option value="<=">
+                                        <= (menor ou igual)</option>
+                                    <option value=">=">>= (maior ou igual)</option>
+                                    <option value="empty">Vazio</option>
+                                    <option value="not_empty">Não vazio</option>
+                                    <option value="contains">Contém</option>
+                                    <option value="matches">Corresponde a (regex)</option>
+                                    <option value="unique">É único (não duplicado)</option>
+                                </select>
+                            </div>
+                            <div id="ruleValueGroup" class="form-group">
+                                <label for="ruleValue">Valor</label>
+                                <input type="text" id="ruleValue" placeholder="Valor para comparação">
+                            </div>
+                        </div>
+                        <div id="rangeGroup" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="ruleMin">Valor Mínimo</label>
+                                    <input type="number" id="ruleMin" placeholder="Ex: 18">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ruleMax">Valor Máximo</label>
+                                    <input type="number" id="ruleMax" placeholder="Ex: 120">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ruleMessage">Mensagem de Erro</label>
+                            <textarea id="ruleMessage"
+                                placeholder="Mensagem que aparecerá quando a regra for violada"></textarea>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-success"><i class="ph ph-floppy-disk"></i> Salvar
+                                Regra</button>
+                            <button type="button" id="cancelRuleBtn" class="btn btn-secondary">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const apiUrl = document.getElementById('apiUrl');
+        const apiToken = document.getElementById('apiToken');
+        const includeLogs = document.getElementById('includeLogs');
+        const testBtn = document.getElementById('testBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const testSpinner = document.getElementById('testSpinner');
+        const analyzeSpinner = document.getElementById('analyzeSpinner');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // Test Connection
+        testBtn.addEventListener('click', async () => {
+            if (!apiUrl.value || !apiToken.value) {
+                showStatus('Preencha a URL e o Token da API', 'error');
+                return;
+            }
+
+            testBtn.disabled = true;
+            testSpinner.classList.add('show');
+
+            try {
+                const response = await fetch('/api/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_url: apiUrl.value,
+                        api_token: apiToken.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus(`✅ Conexão bem-sucedida! Projeto: ${data.project.title} (ID: ${data.project.id})`, 'success');
+
+                    // Show buttons
+                    const openRulesBtn = document.getElementById('openRulesBtn');
+                    openRulesBtn.style.display = 'inline-block';
+                    analyzeBtn.style.display = 'inline-block';
+
+                    // Update Stepper
+                    document.getElementById('step1').classList.add('completed');
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step3').classList.add('active');
+
+                    // Button Logic: Test -> secondary, Rules -> primary (blue), Analyze -> disabled
+                    testBtn.classList.remove('btn-primary');
+                    testBtn.classList.add('btn-secondary');
+
+                    // Rules button gets primary blue styling (matches stepper)
+                    openRulesBtn.className = 'btn btn-primary';
+                    console.log('Rules button classes after change:', openRulesBtn.className);
+
+                    // Analyze stays disabled until rules are reviewed
+                    analyzeBtn.disabled = true;
+
+                } else {
+                    showStatus(`❌ Erro: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Erro de conexão: ${error.message}`, 'error');
+            } finally {
+                testBtn.disabled = false;
+                testSpinner.classList.remove('show');
+            }
+        });
+
+        // Run Analysis
+        analyzeBtn.addEventListener('click', async () => {
+            if (!apiUrl.value || !apiToken.value) {
+                showStatus('Preencha a URL e o Token da API', 'error');
+                return;
+            }
+
+            // Coleta opções de verificação estrutural
+            const structuralChecks = [];
+            if (document.getElementById('checkRequired')?.checked) structuralChecks.push('sys_required');
+            if (document.getElementById('checkRange')?.checked) structuralChecks.push('sys_range');
+            if (document.getElementById('checkFormat')?.checked) structuralChecks.push('sys_format');
+            if (document.getElementById('checkChoices')?.checked) structuralChecks.push('sys_choices');
+
+            analyzeBtn.disabled = true;
+            testBtn.disabled = true;
+            analyzeSpinner.classList.add('show');
+            // showStatus('🔄 Executando análise... Isso pode levar alguns minutos.', 'success'); // Replaced by Progress bar
+
+            // Show Progress Bar
+            const progressContainer = document.getElementById('analysisProgressContainer');
+            const progressBar = document.getElementById('progressBarFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercentage = document.getElementById('progressPercentage');
+
+            // Reset UI
+            connectionStatus.style.display = 'none';
+            connectionStatus.className = 'status';
+            connectionStatus.textContent = '';
+            resultsSection.classList.remove('show');
+
+            progressContainer.style.display = 'block';
+
+            // Simulated Progress Animation
+            let progress = 0;
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressText.textContent = 'Iniciando análise...';
+
+            const progressInterval = setInterval(() => {
+                // Slower increment as it gets higher
+                let increment = 1;
+                if (progress > 50) increment = 0.5;
+                if (progress > 80) increment = 0.2;
+                if (progress > 95) increment = 0.05;
+
+                if (progress < 99) {
+                    progress += increment;
+                    progressBar.style.width = `${Math.min(progress, 99)}%`;
+                    progressPercentage.textContent = `${Math.floor(progress)}%`;
+
+                    // Update text based on progress stage
+                    if (progress < 20) progressText.textContent = 'Conectando ao seu projeto do REDCap...';
+                    else if (progress < 50) progressText.textContent = 'Verificando metadados...';
+                    else if (progress < 80) progressText.textContent = 'Aplicando regras de validação...';
+                    else progressText.textContent = 'Gerando relatório final...';
+                }
+            }, 300); // Update every 300ms
+
+            // Update Stepper
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step3').classList.add('completed');
+            document.getElementById('step4').classList.add('active');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_url: apiUrl.value,
+                        api_token: apiToken.value,
+                        include_logs: includeLogs.checked,
+                        structural_checks: structuralChecks // Send new checks
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('✅ Análise concluída com sucesso!', 'success');
+                    document.getElementById('openRulesBtn').style.display = 'inline-block';
+                    displayResults(data);
+                } else {
+                    showStatus(`❌ Erro: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Erro de conexão: ${error.message}`, 'error');
+            } finally {
+                // Stop Animation
+                clearInterval(progressInterval);
+
+                // Complete the bar
+                progressBar.style.width = '100%';
+                progressPercentage.textContent = '100%';
+                progressText.textContent = 'Concluído!';
+
+                analyzeBtn.disabled = false;
+                testBtn.disabled = false;
+                analyzeSpinner.classList.remove('show');
+
+                // Cleanup with delay
+                setTimeout(() => {
+                    if (resultsSection.classList.contains('show')) {
+                        progressContainer.style.display = 'none';
+                    }
+                }, 1500);
+            }
+        });
+
+        // Display Results
+        function displayResults(data) {
+            resultsSection.classList.add('show');
+            document.getElementById('step4').classList.add('completed');
+            document.getElementById('step4').classList.remove('active');
+
+            // Summary
+            document.getElementById('projectName').textContent = `Projeto: ${data.summary.project_name}`;
+            document.getElementById('totalRecords').textContent = data.summary.total_records;
+            document.getElementById('totalQueries').textContent = data.summary.total_queries;
+            document.getElementById('highPriority').textContent = data.summary.high_priority;
+            document.getElementById('mediumPriority').textContent = data.summary.medium_priority;
+            document.getElementById('lowPriority').textContent = data.summary.low_priority;
+
+            // Error list
+            const errorList = document.getElementById('errorList');
+            errorList.innerHTML = data.summary.most_common_errors
+                .map((err, i) => `<li class="animate-slide-up"><span>${i + 1}. ${err}</span></li>`)
+                .join('');
+
+            // Field list
+            const fieldList = document.getElementById('fieldList');
+            fieldList.innerHTML = data.summary.fields_with_issues
+                .map((field, i) => `<li class="animate-slide-up"><span>${i + 1}. ${field}</span></li>`)
+                .join('');
+
+            // Query count and pagination
+            document.getElementById('queryCount').textContent =
+                `(mostrando ${data.queries.length} de ${data.total_queries_available})`;
+
+            // Inicializa paginação
+            currentPage = data.page || 1;
+            totalPages = data.total_pages || 1;
+            currentFilter = null;
+            updatePaginationUI();
+
+            // Query table
+            updateQueryTable(data.queries);
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Download handlers
+        document.getElementById('downloadPdf').addEventListener('click', () => {
+            window.location.href = '/api/download/pdf';
+        });
+
+        document.getElementById('downloadJson').addEventListener('click', () => {
+            window.location.href = '/api/download/json';
+        });
+
+        // Show status message
+        function showStatus(message, type) {
+            connectionStatus.textContent = message;
+            connectionStatus.className = `status ${type} show`;
+        }
+
+        // Paginação
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilter = 'all'; // Changed default to 'all' to match string logic
+        let currentPageSize = 50;
+        let currentSearch = '';
+
+        // Search Input
+        const querySearchInput = document.getElementById('querySearchInput');
+        let searchTimeout;
+
+        querySearchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearch = e.target.value.trim();
+                currentPage = 1;
+                loadPage(currentPage, currentFilter, currentPageSize, currentSearch);
+            }, 300); // Debounce 300ms
+        });
+
+        // Page Size Selector
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        pageSizeSelect.addEventListener('change', (e) => {
+            currentPageSize = parseInt(e.target.value);
+            currentPage = 1; // Reset to first page
+            loadPage(currentPage, currentFilter, currentPageSize, currentSearch);
+        });
+
+        function updatePaginationUI() {
+            const pageText = `${currentPage}/${totalPages}`;
+            document.getElementById('pageInfo').textContent = pageText;
+            document.getElementById('pageInfoBottom').textContent = pageText;
+
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('prevPageBottom').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+            document.getElementById('nextPageBottom').disabled = currentPage >= totalPages;
+        }
+
+        async function loadPage(page, priority = 'all', page_size = 50, search = '') {
+            let url = `/api/queries?page=${page}&page_size=${page_size}`;
+            if (priority && priority !== 'all') url += `&priority=${priority}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            // Collect Column Filters
+            document.querySelectorAll('.filter-input').forEach(input => {
+                const col = input.dataset.col;
+                const val = input.value.trim();
+                if (val) {
+                    url += `&filter_${col}=${encodeURIComponent(val)}`;
+                }
+            });
+
+            // Update state globals to match current request
+            currentPage = page;
+            currentFilter = priority;
+            currentPageSize = page_size;
+            currentSearch = search;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPage = data.page;
+                    totalPages = data.total_pages;
+
+                    document.getElementById('queryCount').textContent =
+                        `(mostrando ${data.queries.length} de ${data.total_queries})`;
+
+                    updateQueryTable(data.queries);
+                    updatePaginationUI();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar página:', error);
+            }
+        }
+
+        // Setup Column Filter Listeners
+        let filterTimeout;
+        document.querySelectorAll('.filter-input').forEach(input => {
+            // For text inputs
+            input.addEventListener('input', () => {
+                clearTimeout(filterTimeout);
+                filterTimeout = setTimeout(() => {
+                    loadPage(1, currentFilter, currentPageSize, currentSearch);
+                }, 300);
+            });
+            // For selects
+            input.addEventListener('change', () => {
+                loadPage(1, currentFilter, currentPageSize, currentSearch);
+            });
+        });
+
+        function updateQueryTable(queries) {
+            const tbody = document.getElementById('queryTableBody');
+            tbody.innerHTML = queries.map(q => `
+                <tr>
+                    <td>${q.record_id}</td>
+                    <td><span class="badge badge-low" style="color: var(--text-primary); background: var(--bg-secondary);">${q.event || '-'}</span></td>
+                    <td>
+                        <div style="font-weight: 500;">${q.field}</div>
+                        ${q.field_label ? `<div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.2; margin-top: 2px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${q.field_label}">${q.field_label}</div>` : ''}
+                    </td>
+                    <td>${q.value ? q.value.substring(0, 25) : 'N/A'}${q.value && q.value.length > 25 ? '...' : ''}</td>
+                    <td style="font-size: 0.8rem;">${q.issue_type}</td>
+                    <td>
+                        <span class="badge badge-${q.priority === 'Alta' ? 'high' : q.priority === 'Média' ? 'medium' : 'low'}">
+                            ${q.priority}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <a href="${q.redcap_link}" target="_blank" class="btn btn-primary" 
+                           style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;"
+                           title="Abre o formulário diretamente para correção.">
+                            Verificar no REDCap
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Event listeners para paginação
+        document.getElementById('prevPage').addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1, currentFilter, currentPageSize, currentSearch); });
+        document.getElementById('nextPage').addEventListener('click', () => { if (currentPage < totalPages) loadPage(currentPage + 1, currentFilter, currentPageSize, currentSearch); });
+        document.getElementById('prevPageBottom').addEventListener('click', () => { if (currentPage > 1) loadPage(currentPage - 1, currentFilter, currentPageSize, currentSearch); });
+        document.getElementById('nextPageBottom').addEventListener('click', () => { if (currentPage < totalPages) loadPage(currentPage + 1, currentFilter, currentPageSize, currentSearch); });
+
+        // Filtros de prioridade
+        const priorityButtons = document.querySelectorAll('#priorityFilters button');
+        priorityButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update buttons UI
+                priorityButtons.forEach(b => {
+                    b.classList.remove('active');
+                    /* Restore valid secondary style if needed, but simple clean works */
+                });
+                /* Handle specific styling removal from previous logic if needed */
+
+                // Set Active
+                const target = e.target.tagName === 'SPAN' ? e.target.parentElement : e.target;
+                target.classList.add('active'); // You might need CSS for .active on buttons
+
+                const filter = target.getAttribute('data-filter');
+
+                // Reset styling manually for simplicity based on previous code
+                document.querySelectorAll('#priorityFilters button').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-secondary');
+                });
+                target.classList.remove('btn-secondary');
+                target.classList.add('btn-primary');
+
+                loadPage(1, filter, currentPageSize, currentSearch);
+            });
+        });
+
+        // ==================== CUSTOM RULES MANAGEMENT ====================
+
+        const rulesModal = document.getElementById('rulesModal');
+        const rulesListView = document.getElementById('rulesListView');
+        const ruleFormView = document.getElementById('ruleFormView');
+        const rulesList = document.getElementById('rulesList');
+        const ruleForm = document.getElementById('ruleForm');
+        const ruleType = document.getElementById('ruleType');
+
+        // Open modal
+        document.getElementById('openRulesBtn').addEventListener('click', () => {
+            rulesModal.classList.add('show');
+            loadRules();
+            loadProjectFields(); // Load fields for dropdown
+        });
+
+        // Close modal and enable Analyze button
+        document.getElementById('closeRulesModal').addEventListener('click', () => {
+            rulesModal.classList.remove('show');
+            enableAnalyzeAfterRules();
+        });
+
+        // Close on backdrop click and enable Analyze button
+        rulesModal.addEventListener('click', (e) => {
+            if (e.target === rulesModal) {
+                rulesModal.classList.remove('show');
+                enableAnalyzeAfterRules();
+            }
+        });
+
+        // Function to enable Analyze button after rules are reviewed
+        function enableAnalyzeAfterRules() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const openRulesBtn = document.getElementById('openRulesBtn');
+
+            // Update Stepper
+            document.getElementById('step3').classList.add('completed');
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step4').classList.add('active');
+
+            // Rules button -> secondary, Analyze -> enabled and primary green
+            openRulesBtn.classList.remove('btn-primary');
+            openRulesBtn.classList.add('btn-secondary');
+
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove('btn-secondary');
+            analyzeBtn.classList.add('btn-primary');
+        }
+
+        // New rule button
+        document.getElementById('newRuleBtn').addEventListener('click', () => {
+            showRuleForm();
+        });
+
+        // Back to list
+        document.getElementById('backToListBtn').addEventListener('click', () => {
+            showRulesList();
+        });
+
+        // Cancel button
+        document.getElementById('cancelRuleBtn').addEventListener('click', () => {
+            showRulesList();
+        });
+
+        // Rule type change - show/hide relevant fields
+        ruleType.addEventListener('change', () => {
+            const type = ruleType.value;
+            document.getElementById('rangeGroup').style.display = type === 'range' ? 'block' : 'none';
+            document.getElementById('ruleValueGroup').style.display = type === 'range' ? 'none' : 'block';
+            document.getElementById('ruleField2Group').style.display = type === 'cross_field' ? 'block' : 'none';
+        });
+
+        // Load rules from API
+        // Store rules globally for optimistic updates
+        let currentRules = [];
+        let projectFields = []; // Cache project fields
+
+        // Load project fields for dropdown
+        async function loadProjectFields() {
+            try {
+                const response = await fetch('/api/fields');
+                const data = await response.json();
+
+                if (data.success && data.fields) {
+                    projectFields = data.fields;
+                    populateFieldDropdowns();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar campos:', error);
+            }
+        }
+
+        // PopulateFieldDropdowns
+        function populateFieldDropdowns() {
+            const ruleField = document.getElementById('ruleField');
+            const ruleField2 = document.getElementById('ruleField2');
+
+            // Clear existing options
+            const defaultOption = '<option value="">Selecione um campo...</option>';
+            const allOption = '<option value="_ALL_" style="font-weight: bold; color: var(--primary);">⚠️ TODOS OS CAMPOS (Verificar projeto inteiro)</option>';
+
+            ruleField.innerHTML = defaultOption + allOption;
+            ruleField2.innerHTML = defaultOption + allOption;
+
+            // Add options
+            projectFields.forEach(f => {
+                // Label first as requested
+                const label = f.field_label ?
+                    `${f.field_label} (${f.field_name})` : f.field_name;
+
+                ruleField.innerHTML += `<option value="${f.field_name}">${label}</option>`;
+                ruleField2.innerHTML += `<option value="${f.field_name}">${label}</option>`;
+            });
+        }
+
+        async function loadRules() {
+            try {
+                const response = await fetch('/api/rules');
+                const data = await response.json();
+
+                if (data.success) {
+                    currentRules = data.rules; // Cache rules
+                    renderRulesList(currentRules);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar regras:', error);
+            }
+        }
+
+        // Format rule description
+        function getRuleDescription(rule) {
+            if (rule.rule_type === 'range') {
+                if (typeof rule.value === 'object') {
+                    return `entre ${rule.value.min} e ${rule.value.max}`;
+                }
+                return `range: ${JSON.stringify(rule.value)}`;
+            } else if (rule.rule_type === 'cross_field') {
+                return `${rule.operator} campo [${rule.field2}]`;
+            } else if (rule.rule_type === 'regex') {
+                return `regex: ${rule.value}`;
+            } else if (rule.rule_type === 'condition') {
+                return `condicional`;
+            }
+
+            // Comparison default
+            return `${rule.operator} ${rule.value}`;
+        }
+
+        // Render rules list
+        function renderRulesList(rules) {
+            if (rules.length === 0) {
+                rulesList.innerHTML = '<div class="empty-state">Nenhuma regra criada ainda.</div>';
+                return;
+            }
+
+            rulesList.innerHTML = rules.map(rule => `
+                <div class="rule-item">
+                    <div class="rule-info">
+                        <h4>
+                            ${rule.enabled ? '<i class="ph ph-check-circle" style="color: var(--success);"></i>' : '<i class="ph ph-pause-circle" style="color: var(--text-secondary);"></i>'} 
+                            ${rule.name}
+                        </h4>
+                        <div style="margin-top: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                            Campo: <span style="color: var(--text-primary);">${rule.field}</span> | 
+                            Tipo: ${rule.rule_type} | 
+                            Prioridade: ${rule.priority}
+                        </div>
+                    </div>
+                    <div class="rule-actions">
+                        <button class="btn btn-secondary" onclick="toggleRule('${rule.id}')" title="${rule.enabled ? 'Pausar' : 'Ativar'}">
+                            ${rule.enabled ? '<i class="ph ph-pause"></i>' : '<i class="ph ph-play"></i>'}
+                        </button>
+                        <button class="btn btn-secondary" onclick="editRule('${rule.id}')" title="Editar">
+                            <i class="ph ph-pencil-simple"></i>
+                        </button>
+                        <button class="btn btn-secondary" onclick="deleteRule('${rule.id}')" style="background: rgba(197,48,48,0.2); color: var(--error);" title="Excluir">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show rule form
+        function showRuleForm(rule = null) {
+            rulesListView.style.display = 'none';
+            ruleFormView.style.display = 'block';
+
+            // Reset form
+            ruleForm.reset();
+            document.getElementById('ruleId').value = '';
+            document.getElementById('rangeGroup').style.display = 'none';
+            document.getElementById('ruleValueGroup').style.display = 'block';
+            document.getElementById('ruleField2Group').style.display = 'none';
+
+            // If editing, populate form
+            if (rule) {
+                document.getElementById('ruleId').value = rule.id;
+                document.getElementById('ruleName').value = rule.name;
+                document.getElementById('ruleType').value = rule.rule_type;
+                document.getElementById('rulePriority').value = rule.priority;
+                document.getElementById('ruleField').value = rule.field;
+                document.getElementById('ruleOperator').value = rule.operator;
+                document.getElementById('ruleMessage').value = rule.message || '';
+
+                if (rule.field2) {
+                    document.getElementById('ruleField2').value = rule.field2;
+                }
+
+                if (rule.rule_type === 'range' && typeof rule.value === 'object') {
+                    document.getElementById('ruleMin').value = rule.value.min || '';
+                    document.getElementById('ruleMax').value = rule.value.max || '';
+                    document.getElementById('rangeGroup').style.display = 'block';
+                    document.getElementById('ruleValueGroup').style.display = 'none';
+                } else {
+                    document.getElementById('ruleValue').value = rule.value || '';
+                }
+
+                if (rule.rule_type === 'cross_field') {
+                    document.getElementById('ruleField2Group').style.display = 'block';
+                }
+
+                // Trigger change to update UI
+                ruleType.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // Show rules list
+        function showRulesList() {
+            ruleFormView.style.display = 'none';
+            rulesListView.style.display = 'block';
+            loadRules();
+        }
+
+        // Edit rule
+        async function editRule(ruleId) {
+            try {
+                const response = await fetch(`/api/rules/${ruleId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    showRuleForm(data.rule);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar regra:', error);
+            }
+        }
+
+        // Toggle rule enabled/disabled with Optimistic UI
+        async function toggleRule(ruleId) {
+            // 1. Find the rule locally
+            const ruleIndex = currentRules.findIndex(r => r.id === ruleId);
+            if (ruleIndex === -1) return;
+
+            const rule = currentRules[ruleIndex];
+            const originalState = rule.enabled;
+
+            // 2. Optimistic update
+            rule.enabled = !rule.enabled;
+            renderRulesList(currentRules); // Re-render immediately from cache
+
+            try {
+                // 3. Send request in background
+                const response = await fetch(`/api/rules/${ruleId}/toggle`, { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success) {
+                    // Revert on failure
+                    console.error('Falha ao alternar regra, revertendo...');
+                    rule.enabled = originalState;
+                    renderRulesList(currentRules);
+                    alert('Erro ao atualizar regra: ' + (data.error || 'Erro desconhecido'));
+                } else {
+                    // Update cache with server source of truth (optional, but good practice)
+                    currentRules[ruleIndex] = data.rule;
+                    renderRulesList(currentRules);
+                }
+            } catch (error) {
+                // Revert on network error
+                console.error('Erro de rede ao alternar regra:', error);
+                rule.enabled = originalState;
+                renderRulesList(currentRules);
+                alert('Erro de conexão ao atualizar regra.');
+            }
+        }
+
+        // Delete rule
+        async function deleteRule(ruleId) {
+            if (!confirm('Tem certeza que deseja excluir esta regra?')) return;
+
+            try {
+                const response = await fetch(`/api/rules/${ruleId}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (data.success) {
+                    loadRules();
+                    showStatus('Regra excluída com sucesso', 'success');
+                } else {
+                    showStatus(`❌ Erro ao excluir: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao excluir regra:', error);
+                showStatus('Erro de conexão ao excluir regra.', 'error');
+            }
+        }
+
+        // Helper: Show Status
+        function showStatus(message, type) {
+            connectionStatus.style.display = 'block';
+            connectionStatus.textContent = message;
+            connectionStatus.className = `status ${type}`;
+        }
+
+        // Submit rule form
+        ruleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const ruleId = document.getElementById('ruleId').value;
+            const type = document.getElementById('ruleType').value;
+
+            // Build value based on type
+            let value;
+            if (type === 'range') {
+                value = {
+                    min: parseFloat(document.getElementById('ruleMin').value) || null,
+                    max: parseFloat(document.getElementById('ruleMax').value) || null
+                };
+            } else {
+                value = document.getElementById('ruleValue').value;
+            }
+
+            const ruleData = {
+                name: document.getElementById('ruleName').value,
+                rule_type: type,
+                field: document.getElementById('ruleField').value,
+                field2: document.getElementById('ruleField2').value || null,
+                operator: document.getElementById('ruleOperator').value,
+                value: value,
+                priority: document.getElementById('rulePriority').value,
+                message: document.getElementById('ruleMessage').value
+            };
+
+            try {
+                let response;
+                if (ruleId) {
+                    // Update
+                    response = await fetch(`/api/rules/${ruleId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ruleData)
+                    });
+                } else {
+                    // Create
+                    response = await fetch('/api/rules', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ruleData)
+                    });
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showRulesList();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar regra:', error);
+                alert('Erro ao salvar regra');
+            }
+        });
+
+        // Magic Rule Generator
+        document.getElementById('generateRuleBtn').addEventListener('click', async () => {
+            const text = document.getElementById('magicRuleInput').value;
+            if (!text) return alert('Digite uma regra para gerar!');
+
+            const btn = document.getElementById('generateRuleBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '⏳ Gerando...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/rules/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const r = data.rule;
+                    document.getElementById('ruleName').value = r.name;
+                    document.getElementById('ruleField').value = r.field;
+                    document.getElementById('ruleType').value = r.rule_type;
+
+                    // Priority default
+                    document.getElementById('rulePriority').value = r.priority || 'Média';
+                    document.getElementById('ruleMessage').value = r.message || '';
+                    document.getElementById('ruleOperator').value = r.operator;
+
+                    // Trigger type change
+                    document.getElementById('ruleType').dispatchEvent(new Event('change'));
+
+                    // Fill values after type change UI update
+                    setTimeout(() => {
+                        if (r.rule_type === 'range') {
+                            // Handle range value "min,max"
+                            const parts = r.value.toString().split(',');
+                            if (parts.length >= 2) {
+                                document.getElementById('ruleMin').value = parts[0].trim();
+                                document.getElementById('ruleMax').value = parts[1].trim();
+                            }
+                        } else {
+                            document.getElementById('ruleValue').value = r.value;
+                        }
+                    }, 50);
+
+                } else {
+                    alert('Erro ao gerar regra: ' + data.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao conectar com a IA');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        });
+        // Filter Toggle Logic
+        function toggleFilter(btn) {
+            // Close all others first
+            document.querySelectorAll('.filter-popover.show').forEach(el => {
+                if (el !== btn.nextElementSibling) {
+                    el.classList.remove('show');
+                }
+            });
+
+            // Toggle current
+            const popover = btn.nextElementSibling;
+            popover.classList.toggle('show');
+            event.stopPropagation();
+        }
+
+        // Close popovers when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.filter-popover') && !e.target.closest('.filter-icon-btn')) {
+                document.querySelectorAll('.filter-popover.show').forEach(el => {
+                    el.classList.remove('show');
+                });
+            }
+        });
+
+        // Highlight active filters
+        function updateFilterIcons() {
+            document.querySelectorAll('.filter-input').forEach(input => {
+                // Ensure input exists and has a parent before accessing
+                if (!input.closest('.th-content')) return;
+
+                const btn = input.closest('.th-content').querySelector('.filter-icon-btn');
+                if (input.value.trim() !== '') {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Update hidden input when checkboxes change
+        window.updateHiddenInput = function (checkbox) {
+            const container = checkbox.closest('.popover-options');
+            const hiddenInput = container.nextElementSibling; // .filter-input
+
+            const checkedValues = Array.from(container.querySelectorAll('input:checked'))
+                .map(cb => cb.value);
+
+            hiddenInput.value = checkedValues.join(',');
+            updateFilterIcons();
+
+            // Reload page with new filters
+            loadPage(1);
+        }
+
+        // Local search in popover
+        window.filterOptions = function (searchInput) {
+            const filterText = searchInput.value.toLowerCase();
+            const container = searchInput.nextElementSibling; // .popover-options
+            const labels = container.querySelectorAll('label');
+
+            labels.forEach(label => {
+                const text = label.textContent.toLowerCase();
+                if (text.includes(filterText)) {
+                    label.style.display = 'block';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+        }
+
+        // Fetch and populate options
+        async function fetchFilterOptions() {
+            try {
+                const response = await fetch('/api/filter-options');
+                const data = await response.json();
+
+                if (data.success && data.options) {
+                    populateFilterOptions('record_id', data.options.record_id);
+                    populateFilterOptions('event_id', data.options.event_id);
+                    populateFilterOptions('field', data.options.field);
+                    populateFilterOptions('value', data.options.value);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar opções de filtro:', error);
+            }
+        }
+
+        function populateFilterOptions(colName, options) {
+            const container = document.querySelector(`.popover-options[data-col="${colName}"]`);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (!options || options.length === 0) {
+                container.innerHTML = '<span style="font-size:0.8rem; color: var(--text-secondary);">Sem opções</span>';
+                return;
+            }
+
+            // Optimization: Use DocumentFragment
+            const fragment = document.createDocumentFragment();
+
+            options.forEach(opt => {
+                const value = (typeof opt === 'object') ? opt.value : opt;
+                const label = (typeof opt === 'object') ? opt.label : opt;
+
+                const labelEl = document.createElement('label');
+                labelEl.style.display = 'flex';
+                labelEl.style.alignItems = 'center';
+                labelEl.style.gap = '6px'; // Better spacing
+                labelEl.style.fontSize = '0.85rem';
+                labelEl.style.padding = '3px 4px';
+                labelEl.style.borderRadius = '3px';
+                labelEl.style.cursor = 'pointer';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = value;
+                checkbox.style.margin = '0'; // Reset margin
+                checkbox.onchange = function () { updateHiddenInput(this); };
+
+                labelEl.appendChild(checkbox);
+                labelEl.appendChild(document.createTextNode(label));
+                fragment.appendChild(labelEl);
+            });
+
+            container.appendChild(fragment);
+        }
+
+        // Initialize
+        fetchFilterOptions();
+    </script>
+</body>
+
+</html>

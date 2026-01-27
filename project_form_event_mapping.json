@@ -1,0 +1,72 @@
+[
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_1_arm_1",
+    "form": "enrollment"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_1_arm_1",
+    "form": "randomization"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_1_arm_1",
+    "form": "visits"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_1_arm_1",
+    "form": "adverse_events"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_1_arm_1",
+    "form": "termination"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_2_arm_1",
+    "form": "visits"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_2_arm_1",
+    "form": "adverse_events"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_2_arm_1",
+    "form": "termination"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_3_arm_1",
+    "form": "visits"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_3_arm_1",
+    "form": "adverse_events"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_3_arm_1",
+    "form": "termination"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_4_arm_1",
+    "form": "visits"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_4_arm_1",
+    "form": "adverse_events"
+  },
+  {
+    "arm_num": 1,
+    "unique_event_name": "event_4_arm_1",
+    "form": "termination"
+  }
+]

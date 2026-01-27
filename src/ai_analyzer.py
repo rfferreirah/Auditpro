@@ -1,0 +1,423 @@
+"""
+REDCap Data Quality Intelligence Agent - LangChain AI Analyzer
+
+Agente com IA para análise inteligente de qualidade de dados.
+Utiliza LangChain com Claude para fornecer insights mais profundos.
+"""
+
+import json
+from typing import Optional
+
+# Tenta importar LangChain (opcional)
+try:
+    from langchain_anthropic import ChatAnthropic
+    from langchain_openai import ChatOpenAI
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+    LANGCHAIN_AVAILABLE = True
+except ImportError:
+    LANGCHAIN_AVAILABLE = False
+
+from src.models import ProjectData, Query, QualityReport
+import config
+
+
+class AIAnalyzer:
+    """
+    Analisador com IA usando LangChain (Suporta OpenAI e Claude).
+    
+    Fornece análises mais profundas e recomendações inteligentes
+    baseadas nos dados e queries identificadas.
+    """
+    
+    def __init__(self, api_key: Optional[str] = None):
+        """
+        Inicializa o analisador de IA.
+        
+        Args:
+            api_key: Chave da API (opcional, usa env se não fornecida)
+        """
+        self.provider = config.AI_PROVIDER
+        self.llm = None
+        
+        if not LANGCHAIN_AVAILABLE:
+            return
+
+        if self.provider == "anthropic":
+            key = api_key or config.ANTHROPIC_API_KEY
+            if key:
+                self.llm = ChatAnthropic(
+                    model="claude-sonnet-4-20250514",
+                    api_key=key,
+                    temperature=0.3,
+                    max_tokens=4096,
+                )
+        elif self.provider == "openai":
+            key = api_key or config.OPENAI_API_KEY
+            if key:
+                self.llm = ChatOpenAI(
+                    model="gpt-4-turbo-preview",
+                    api_key=key,
+                    temperature=0.3,
+                    max_tokens=4096,
+                )
+    
+    @property
+    def is_available(self) -> bool:
+        """Verifica se a IA está disponível."""
+        return self.llm is not None
+    
+    def analyze(self, project_data: ProjectData, include_logs: bool = False, structural_checks: list[str] = None) -> QualityReport:
+        """
+        Executa o pipeline completo de análise.
+        
+        Args:
+            project_data: Dados do projeto REDCap
+            include_logs: Se True, analisa logs de auditoria
+            structural_checks: Lista de verificações estruturais a ativar
+            
+        Returns:
+            QualityReport completo
+        """
+        all_queries = []
+        
+        # 1. Análise Estrutural (Configurável)
+        # Se structural_checks for None, o analyzer usará seus defaults (tudo ativado)
+        # Se for uma lista vazia [], desativará tudo
+        structural = StructuralAnalyzer(project_data, enabled_checks=structural_checks)
+        all_queries.extend(structural.analyze())
+        
+        # Placeholder for other analyzers
+        # data_consistency = DataConsistencyAnalyzer(project_data)
+        # all_queries.extend(data_consistency.analyze())
+        
+        # audit_log = AuditLogAnalyzer(project_data)
+        # if include_logs:
+        #     all_queries.extend(audit_log.analyze())
+            
+        # report = QualityReport(project_data, all_queries)
+        # return report
+        return QualityReport(project_data, all_queries) # Temporary return
+    
+    def analyze_queries(self, report: QualityReport, project_data: ProjectData) -> dict:
+        """
+        Analisa queries com IA e fornece insights.
+        
+        Args:
+            report: Relatório de qualidade
+            project_data: Dados do projeto
+            
+        Returns:
+            Dicionário com análise de IA
+        """
+        if not self.is_available:
+            return {
+                "available": False,
+                "message": "LangChain/Anthropic não configurado. Configure ANTHROPIC_API_KEY no .env"
+            }
+        
+        # Prepara resumo para a IA
+        summary = self._prepare_summary(report, project_data)
+        
+        # Cria prompt
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", """Você é um especialista em Data Management de estudos clínicos com vasta experiência em REDCap.
+Sua tarefa é analisar os resultados de uma auditoria automática de qualidade de dados e fornecer:
+
+1. **Análise Executiva**: Resumo do estado geral da qualidade dos dados (2-3 parágrafos)
+2. **Principais Preocupações**: Lista das 5 questões mais críticas que precisam de atenção imediata
+3. **Padrões Identificados**: Tendências ou padrões nos erros que indicam problemas sistêmicos
+4. **Recomendações**: Ações concretas para melhorar a qualidade dos dados
+5. **Priorização**: Ordem sugerida para resolver os problemas
+
+Seja objetivo e técnico. Use terminologia de pesquisa clínica."""),
+            ("human", """Analise os seguintes resultados de auditoria de qualidade de dados do REDCap:
+
+## Informações do Projeto
+- Total de participantes: {total_records}
+- Total de queries geradas: {total_queries}
+- Queries de Alta Prioridade: {high_priority}
+- Queries de Média Prioridade: {medium_priority}
+- Queries de Baixa Prioridade: {low_priority}
+
+## Tipos de Erro Mais Comuns
+{error_types}
+
+## Campos com Mais Problemas
+{problem_fields}
+
+## Amostra de Queries (primeiras 20)
+{sample_queries}
+
+Por favor, forneça sua análise detalhada.""")
+        ])
+        
+        # Executa análise
+        chain = prompt | self.llm | StrOutputParser()
+        
+        try:
+            analysis = chain.invoke({
+                "total_records": summary["total_records"],
+                "total_queries": summary["total_queries"],
+                "high_priority": summary["high_priority"],
+                "medium_priority": summary["medium_priority"],
+                "low_priority": summary["low_priority"],
+                "error_types": summary["error_types"],
+                "problem_fields": summary["problem_fields"],
+                "sample_queries": summary["sample_queries"],
+            })
+            
+            return {
+                "available": True,
+                "analysis": analysis,
+            }
+        except Exception as e:
+            return {
+                "available": False,
+                "message": f"Erro na análise de IA: {str(e)}"
+            }
+    
+    def suggest_corrections(self, queries: list[Query]) -> list[dict]:
+        """
+        Sugere correções específicas para queries usando IA.
+        
+        Args:
+            queries: Lista de queries a analisar
+            
+        Returns:
+            Lista de sugestões de correção
+        """
+        if not self.is_available:
+            return []
+        
+        # Limita a 10 queries para não exceder tokens
+        queries_to_analyze = queries[:10]
+        
+        queries_text = "\n".join([
+            f"- Campo: {q.field}, Valor: {q.value_found}, Erro: {q.issue_type}, "
+            f"Explicação: {q.explanation}"
+            for q in queries_to_analyze
+        ])
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", """Você é um especialista em correção de dados de estudos clínicos.
+Para cada query de qualidade apresentada, sugira uma correção específica e prática.
+Responda em JSON com o formato:
+[{"field": "nome_campo", "suggestion": "sugestão de correção", "action": "ação recomendada"}]"""),
+            ("human", """Sugira correções para as seguintes queries:
+
+{queries}
+
+Retorne apenas o JSON, sem explicações adicionais.""")
+        ])
+        
+        chain = prompt | self.llm | StrOutputParser()
+        
+        try:
+            result = chain.invoke({"queries": queries_text})
+            # Tenta parsear JSON
+            suggestions = json.loads(result)
+            return suggestions
+        except Exception:
+            return []
+    
+    def generate_report_summary(self, report: QualityReport) -> str:
+        """
+        Gera um resumo executivo do relatório usando IA.
+        
+        Args:
+            report: Relatório de qualidade
+            
+        Returns:
+            Resumo em texto
+        """
+        if not self.is_available:
+            return "Análise de IA não disponível."
+        
+        from collections import Counter
+        priority_counts = Counter(q.priority for q in report.queries)
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", """Você é um especialista em pesquisa clínica escrevendo um resumo executivo 
+para o investigador principal de um estudo. Seja conciso e profissional."""),
+            ("human", """Escreva um resumo executivo (máximo 3 parágrafos) sobre a qualidade dos dados:
+
+- Total de participantes: {total_records}
+- Total de queries: {total_queries}
+- Alta prioridade: {high}
+- Média prioridade: {medium}
+- Baixa prioridade: {low}
+- Principais tipos de erro: {errors}""")
+        ])
+        
+        chain = prompt | self.llm | StrOutputParser()
+        
+        try:
+            summary = chain.invoke({
+                "total_records": report.project_summary.total_records,
+                "total_queries": report.project_summary.total_queries_generated,
+                "high": priority_counts.get("Alta", 0),
+                "medium": priority_counts.get("Média", 0),
+                "low": priority_counts.get("Baixa", 0),
+                "errors": ", ".join(report.project_summary.most_common_error_types[:5]),
+            })
+            return summary
+        except Exception as e:
+            return f"Erro ao gerar resumo: {str(e)}"
+    
+    def _prepare_summary(self, report: QualityReport, project_data: ProjectData) -> dict:
+        """Prepara resumo dos dados para análise de IA."""
+        from collections import Counter
+        
+        priority_counts = Counter(q.priority for q in report.queries)
+        error_types = Counter(q.issue_type for q in report.queries)
+        
+        # Formata tipos de erro
+        error_types_text = "\n".join([
+            f"- {config.ISSUE_TYPES.get(t, t)}: {c} ocorrências"
+            for t, c in error_types.most_common(10)
+        ])
+        
+        # Formata campos com problemas
+        problem_fields_text = "\n".join([
+            f"- {field}"
+            for field in report.project_summary.fields_with_most_issues[:10]
+        ])
+        
+        # Amostra de queries
+        sample_queries_text = "\n".join([
+            f"- [{q.priority}] Record {q.record_id}, Campo: {q.field}, "
+            f"Tipo: {config.ISSUE_TYPES.get(q.issue_type, q.issue_type)}"
+            for q in report.queries[:20]
+        ])
+        
+        return {
+            "total_records": report.project_summary.total_records,
+            "total_queries": report.project_summary.total_queries_generated,
+            "high_priority": priority_counts.get("Alta", 0),
+            "medium_priority": priority_counts.get("Média", 0),
+            "low_priority": priority_counts.get("Baixa", 0),
+            "error_types": error_types_text,
+            "problem_fields": problem_fields_text,
+            "sample_queries": sample_queries_text,
+            "sample_queries": sample_queries_text,
+        }
+
+    def parse_natural_language_rule(self, text: str, field_list: list[str] = None) -> dict:
+        """
+        Interpreta uma regra em linguagem natural e converte para JSON estruturado.
+        
+        Args:
+            text: Texto da regra (ex: "A idade deve ser maior que 18")
+            field_list: Lista opcional de nomes de variáveis do projeto
+            
+        Returns:
+            Dicionário com a estrutura da regra ou erro
+        """
+        if not self.is_available:
+            return {
+                "success": False,
+                "error": "IA não configurada"
+            }
+            
+        context_str = ""
+        if field_list:
+            # Limita a 500 campos para não estourar o contexto
+            fields_str = ", ".join(field_list[:500])
+            context_str = f"""
+CONTEXTO DO PROJETO:
+Abaixo estão os nomes reais das variáveis (campos) no banco de dados.
+Sempre que possível, use um valor desta lista para o campo 'field'.
+Se o usuário disser "idade", e na lista tiver "age_years", use "age_years".
+
+Campos Disponíveis: [{fields_str}]
+"""
+
+        # Build prompt using string concatenation to safely handle JSON braces
+        system_intro = "Você é um assistente especialista em criação de regras de validação de dados.\n"
+        system_intro += "Sua tarefa é converter uma solicitação em linguagem natural para um objeto JSON de regra estruturada.\n"
+        
+        # Add context if available
+        system_context = context_str if context_str else ""
+        
+        # Schema definition - IMPORTANT: double braces {{ }} to escape for LangChain
+        schema_def = """
+        O Schema da Regra é:
+        {{
+            "name": "Nome curto e descritivo da regra",
+            "field": "nome_do_campo_snake_case (se 'todo o projeto', use '_ALL_')",
+            "rule_type": "comparison" | "range" | "regex" | "condition" | "uniqueness" | "cross_field",
+            "operator": "=" | "!=" | ">" | "<" | ">=" | "<=" | "between" | "matches" | "contains" | "unique" | "empty" | "not_empty" | "present_implies",
+            "value": "valor da regra (ver formatos abaixo)",
+            "priority": "Alta" | "Média" | "Baixa",
+            "message": "Mensagem de erro amigável pro usuário"
+        }}
+        
+        INSTRUÇÃO ESPECIAL (WILDCARD):
+        Se o usuário pedir para verificar "todo o projeto", "todos os campos", "campos em branco geral" ou similar,
+        defina "field": "_ALL_"
+
+        BIBLIOTECA DE PADRÕES INTELIGENTES (Use se o usuário não especificar):
+        1. CPF: rule_type="regex", operator="matches", value="^\\d{{3}}\\.\\d{{3}}\\.\\d{{3}}-\\d{{2}}$"
+        2. DATES (Futuro): rule_type="comparison", operator="<=", value="TODAY" (para nascimento/visita passada)
+        3. DATES (Passado): rule_type="comparison", operator=">=", value="TODAY" (para agendamento futuro)
+        4. EMAIL: rule_type="regex", operator="matches", value="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{{2,}}$"
+        5. LÓGICA CRUZADA (Cross-field):
+           - "Se X for Sim, Y não pode ser vazio" -> rule_type="condition", operator="not_empty", value="{{'if_field': 'X', 'if_value': 'Sim'}}"
+           - "Data Alta > Data Internação" -> rule_type="cross_field", operator=">", value="data_internacao"
+
+        Exemplos Avançados:
+        
+        User: "O CPF deve ter formato válido"
+        JSON: {{"name": "Formato CPF", "field": "cpf", "rule_type": "regex", "operator": "matches", "value": "^\\d{{3}}\\.\\d{{3}}\\.\\d{{3}}-\\d{{2}}$", "priority": "Alta", "message": "CPF fora do padrão XXX.XXX.XXX-XX"}}
+
+        User: "Data de nascimento não pode ser futura"
+        JSON: {{"name": "Nascimento Futuro", "field": "dob", "rule_type": "comparison", "operator": "<=", "value": "TODAY", "priority": "Alta", "message": "Data de nascimento não pode ser no futuro"}}
+        
+        User: "Se o paciente teve alta, a data da alta é obrigatória"
+        JSON: {{"name": "Data Alta Obrigatória", "field": "dt_alta", "rule_type": "condition", "operator": "not_empty", "value": "{{\"if_field\": \"status_alta\", \"if_value\": \"Sim\"}}", "priority": "Alta", "message": "Data da alta deve ser preenchida se paciente teve alta"}}
+
+        User: "Verificar campos faltantes em todo o projeto"
+        JSON: {{"name": "Campos Faltantes (Geral)", "field": "_ALL_", "rule_type": "condition", "operator": "empty", "value": "true", "priority": "Alta", "message": "Campo obrigatório não preenchido"}}
+
+        User: "O peso precisa estar entre 30 e 200"
+        JSON: {{"name": "Range de Peso", "field": "weight", "rule_type": "range", "operator": "between", "value": "30,200", "priority": "Média", "message": "Peso fora dos limites permitidos (30-200)"}}
+
+        User: "Data de alta deve ser posterior à admissão"
+        JSON: {{"name": "Consistência de Datas", "field": "dt_alta", "rule_type": "cross_field", "operator": ">", "value": "dt_admissao", "priority": "Alta", "message": "Data de alta anterior à admissão"}}
+        """
+        
+        full_system_message = system_intro + system_context + schema_def
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", full_system_message),
+            ("human", """Converta esta regra para JSON:
+"{text}"
+
+Retorne APENAS o JSON válido, sem markdown ou explicações.""")
+        ])
+        
+        chain = prompt | self.llm | StrOutputParser()
+        
+        try:
+            result = chain.invoke({"text": text})
+            rule_data = json.loads(result)
+            return {
+                "success": True,
+                "rule": rule_data
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Erro ao interpretar regra: {str(e)}"
+            }
+
+
+def create_ai_analyzer() -> AIAnalyzer:
+    """
+    Cria instância do analisador de IA.
+    
+    Returns:
+        AIAnalyzer configurado
+    """
+    return AIAnalyzer()

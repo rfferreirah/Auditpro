@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Audit PRO</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-body);
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            padding: 2.5rem;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+        }
+
+        .logo-title {
+            font-size: 2.2rem;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-subtitle {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* Input with Icon Wrapper */
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper input {
+            padding-left: 3rem;
+        }
+
+        .input-wrapper input:focus~i {
+            color: var(--primary);
+        }
+
+        /* Password strength indicator */
+        .password-strength {
+            display: flex;
+            gap: 4px;
+            margin-top: 0.5rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            flex: 1;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            transition: background 0.3s;
+        }
+
+        .strength-bar.active.weak {
+            background: var(--danger);
+        }
+
+        .strength-bar.active.medium {
+            background: var(--warning);
+        }
+
+        .strength-bar.active.strong {
+            background: var(--success);
+        }
+
+        .password-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            text-align: left;
+        }
+
+        /* Footer */
+        .register-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .register-footer p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .register-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .register-footer a:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        /* Theme toggle */
+        .theme-toggle-wrapper {
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card register-card animate-fade-in">
+        <div class="logo-container">
+            <div class="logo-title">Audit PRO</div>
+            <p class="logo-subtitle">Crie sua conta para começar</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="status {{ category }} show"
+            style="margin-bottom: 2rem; text-align: left; display: flex; gap: 0.5rem; align-items: flex-start;">
+            <i class="ph ph-{% if category == 'error' %}warning-circle{% else %}check-circle{% endif %}"
+                style="font-size: 1.2rem; margin-top: 2px;"></i>
+            <div>{{ message }}</div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('register') }}" method="POST" id="registerForm">
+            <div class="form-group" style="text-align: left;">
+                <label for="full_name" style="font-weight: 500;">Nome Completo</label>
+                <div class="input-wrapper">
+                    <input type="text" id="full_name" name="full_name" class="input" placeholder="Seu nome completo"
+                        required>
+                    <i class="ph ph-user"></i>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label for="email" style="font-weight: 500;">E-mail</label>
+                <div class="input-wrapper">
+                    <input type="email" id="email" name="email" class="input" placeholder="nome@organizacao.com"
+                        required>
+                    <i class="ph ph-envelope"></i>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label for="organization" style="font-weight: 500;">Organização <span
+                        style="color: var(--text-secondary); font-weight: 400;">(opcional)</span></label>
+                <div class="input-wrapper">
+                    <input type="text" id="organization" name="organization" class="input"
+                        placeholder="Sua instituição ou empresa">
+                    <i class="ph ph-buildings"></i>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label for="role" style="font-weight: 500;">Função/Cargo</label>
+                <div class="input-wrapper">
+                    <select id="role" name="role" class="input" style="padding-left: 3rem; cursor: pointer;" required
+                        onchange="toggleOutroField()">
+                        <option value="" disabled selected>Selecione sua função</option>
+                        <option value="pesquisador">Pesquisador</option>
+                        <option value="gestor">Gestor</option>
+                        <option value="gestor_dados">Profissional de Dados</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                    <i class="ph ph-identification-badge"></i>
+                </div>
+            </div>
+
+            <div class="form-group" id="outroFieldGroup" style="text-align: left; display: none;">
+                <label for="role_outro" style="font-weight: 500;">Descreva sua função</label>
+                <div class="input-wrapper">
+                    <input type="text" id="role_outro" name="role_outro" class="input"
+                        placeholder="Ex: Coordenador, Analista, etc.">
+                    <i class="ph ph-note-pencil"></i>
+                </div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label for="password" style="font-weight: 500;">Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" class="input" placeholder="Mínimo 8 caracteres"
+                        required minlength="8">
+                    <i class="ph ph-lock-key"></i>
+                </div>
+                <div class="password-strength">
+                    <div class="strength-bar" id="bar1"></div>
+                    <div class="strength-bar" id="bar2"></div>
+                    <div class="strength-bar" id="bar3"></div>
+                    <div class="strength-bar" id="bar4"></div>
+                </div>
+                <div class="password-hint" id="passwordHint">Use letras, números e símbolos</div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label for="confirm_password" style="font-weight: 500;">Confirmar Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="confirm_password" name="confirm_password" class="input"
+                        placeholder="Repita a senha" required>
+                    <i class="ph ph-lock"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; margin-top: 1rem; justify-content: center;">
+                <i class="ph ph-user-plus"></i> Criar Conta
+            </button>
+        </form>
+
+        <div class="register-footer">
+            <p>Já possui uma conta? <a href="{{ url_for('login') }}">Fazer login</a></p>
+
+            <div class="theme-toggle-wrapper">
+                <button id="themeToggleBtn" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <i class="ph ph-sun"></i> Alternar Tema
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle outro description field
+        function toggleOutroField() {
+            const roleSelect = document.getElementById('role');
+            const outroGroup = document.getElementById('outroFieldGroup');
+            const outroInput = document.getElementById('role_outro');
+
+            if (roleSelect.value === 'outro') {
+                outroGroup.style.display = 'block';
+                outroInput.required = true;
+            } else {
+                outroGroup.style.display = 'none';
+                outroInput.required = false;
+                outroInput.value = '';
+            }
+        }
+
+        // Password strength checker
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm_password');
+        const bars = [
+            document.getElementById('bar1'),
+            document.getElementById('bar2'),
+            document.getElementById('bar3'),
+            document.getElementById('bar4')
+        ];
+        const hint = document.getElementById('passwordHint');
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/\d/)) strength++;
+            if (password.match(/[^a-zA-Z\d]/)) strength++;
+
+            return strength;
+        }
+
+        function updateStrengthIndicator(strength) {
+            const levels = ['weak', 'weak', 'medium', 'strong', 'strong'];
+            const hints = [
+                'Senha muito fraca',
+                'Senha fraca - adicione mais caracteres',
+                'Senha média - adicione símbolos',
+                'Senha forte',
+                'Senha muito forte!'
+            ];
+
+            bars.forEach((bar, index) => {
+                bar.classList.remove('active', 'weak', 'medium', 'strong');
+                if (index < strength) {
+                    bar.classList.add('active', levels[strength]);
+                }
+            });
+
+            hint.textContent = hints[strength];
+        }
+
+        passwordInput.addEventListener('input', (e) => {
+            const strength = checkPasswordStrength(e.target.value);
+            updateStrengthIndicator(strength);
+        });
+
+        // Form validation
+        document.getElementById('registerForm').addEventListener('submit', (e) => {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            if (password !== confirm) {
+                e.preventDefault();
+                alert('As senhas não coincidem!');
+                confirmInput.focus();
+            }
+        });
+
+        // Theme Logic
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const html = document.documentElement;
+        const icon = themeToggleBtn.querySelector('i');
+
+        function updateIcon(theme) {
+            if (theme === 'light') {
+                icon.classList.remove('ph-sun');
+                icon.classList.add('ph-moon');
+            } else {
+                icon.classList.remove('ph-moon');
+                icon.classList.add('ph-sun');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            html.setAttribute('data-theme', 'light');
+            updateIcon('light');
+        } else {
+            updateIcon('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'dark');
+                updateIcon('dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                updateIcon('light');
+            }
+        });
+    </script>
+</body>
+
+</html>

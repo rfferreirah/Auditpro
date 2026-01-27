@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRD - Audit PRO</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --heading-color: #0f172a;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        /* Header Styles */
+        header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--heading-color);
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 1.25em;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .meta {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #64748b;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Content Styles */
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.4em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 1em;
+            text-align: justify;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 1.5em;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 0.5em;
+        }
+
+        /* Checklist Styles */
+        .task-list-item {
+            list-style: none;
+            margin-left: -20px;
+        }
+
+        .task-list-item input {
+            margin-right: 10px;
+        }
+
+        /* Code and Pre */
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            color: #be185d;
+        }
+
+        pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+
+            h2:first-of-type {
+                page-break-before: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Documento de Requisitos do Produto (PRD)</h1>
+            <div class="subtitle">REDCap Data Quality Intelligence Agent (Audit PRO)</div>
+            <div class="meta">
+                <span><strong>Versão:</strong> 2.0</span>
+                <span><strong>Data:</strong> 24/01/2026</span>
+                <span><strong>Status:</strong> Ativo/Desenvolvimento</span>
+            </div>
+        </header>
+
+        <section>
+            <h2>1. Visão Geral do Produto</h2>
+            <p>O <strong>Audit PRO</strong> é um agente automatizado inteligente projetado para revolucionar o
+                gerenciamento de qualidade de dados em pesquisas clínicas. Ele conecta-se diretamente a bancos de dados
+                REDCap para realizar auditorias instantâneas e abrangentes, identificando inconsistências, dados
+                ausentes e erros lógicos que o monitoramento manual muitas vezes deixa passar. Combinando regras de
+                validação determinísticas com IA Generativa (LLMs), oferece uma abordagem híbrida para "Data Cleaning".
+            </p>
+
+            <h2>2. Declaração do Problema</h2>
+            <ul>
+                <li><strong>Ineficiência:</strong> A limpeza manual de dados em Excel ou via verificações visuais
+                    consome muito tempo (horas/dias).</li>
+                <li><strong>Erro Humano:</strong> A fadiga leva a erros despercebidos em grandes conjuntos de dados.
+                </li>
+                <li><strong>Riscos de Segurança:</strong> Dados clínicos inválidos (ex: impossibilidades fisiológicas)
+                    podem passar despercebidos.</li>
+                <li><strong>Complexidade:</strong> Criar regras lógicas personalizadas no REDCap exige conhecimento
+                    técnico que usuários padrão geralmente não possuem.</li>
+            </ul>
+
+            <h2>3. Metas e Objetivos</h2>
+            <ul>
+                <li><strong>Reduzir Tempo de Auditoria:</strong> Cortar o tempo de limpeza de horas para segundos.</li>
+                <li><strong>Democratizar Lógica:</strong> Permitir que usuários não técnicos criem regras de validação
+                    complexas usando linguagem natural (IA).</li>
+                <li><strong>Garantir Integridade:</strong> Garantir 100% de detecção de erros estruturais de
+                    processamento definidos.</li>
+                <li><strong>Relatórios Profissionais:</strong> Gerar relatórios em PDF/JSON prontos para auditoria e
+                    monitores.</li>
+            </ul>
+
+            <h2>4. Personas do Usuário</h2>
+            <ol>
+                <li><strong>Gerente de Dados Clínicos (CDM):</strong> Precisa de detecção confiável de erros em massa e
+                    gerenciamento de queries.</li>
+                <li><strong>Investigador Principal (IP):</strong> Precisa de garantia da integridade dos dados para
+                    publicações.</li>
+                <li><strong>Coordenador de Estudo:</strong> Precisa de feedback imediato sobre erros de digitação antes
+                    das visitas de monitoria.</li>
+                <li><strong>Monitor (CRA):</strong> Precisa de um checklist de problemas para verificar durante as
+                    visitas ao centro.</li>
+            </ol>
+
+            <h2>5. Requisitos Funcionais</h2>
+
+            <h3>5.1 Autenticação e Gestão de Usuários</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Cadastro/Login:</strong>
+                    Autenticação segura por e-mail/senha (Supabase).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Gestão de Papéis:</strong>
+                    Suporte para diferentes papéis (Gerente, Coordenador, etc.).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Gestão de Sessão:</strong>
+                    Logout seguro e persistência de sessão.</li>
+            </ul>
+
+            <h3>5.2 Integração REDCap</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Conexão API:</strong>
+                    Conectar via Token API e URL.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Exportação de
+                        Metadados:</strong> Buscar dicionário do projeto (variáveis, formulários).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Exportação de
+                        Dados:</strong> Buscar dados clínicos (registros, eventos).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Logging:</strong> Opção para
+                    incluir logs de auditoria na análise.</li>
+            </ul>
+
+            <h3>5.3 Motor de Análise de Dados</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Análise Estrutural:</strong>
+                    Detectar campos ausentes, erros de lógica condicional (branching logic) e incompatibilidade de tipos
+                    de dados.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Geração de Queries:</strong>
+                    Gerar automaticamente queries para problemas identificados.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Priorização:</strong>
+                    Classificar automaticamente problemas como Alta, Média ou Baixa prioridade.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Análise com IA (LangChain +
+                        Claude):</strong> Gerar resumos executivos e insights a partir de padrões de queries.</li>
+            </ul>
+
+            <h3>5.4 Motor de Regras Customizadas</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>CRUD de Regras:</strong>
+                    Interface para Criar, Ler, Atualizar, Deletar regras de validação personalizadas (armazenadas em
+                    JSON).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Tipos de Regras
+                        Suportados:</strong>
+                    <ul>
+                        <li><code>comparison</code> (Operadores padrão: =, !=, &lt;, &gt;, &lt;=, &gt;=)</li>
+                        <li><code>range</code> (Entre valores)</li>
+                        <li><code>regex</code> (Correspondência de padrão)</li>
+                        <li><code>cross_field</code> (Lógica de comparação entre dois campos distintos)</li>
+                        <li><code>condition</code> (Lógica condicional)</li>
+                    </ul>
+                </li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Geração por Linguagem
+                        Natural:</strong> Funcionalidade "Regra Mágica" para gerar lógica Python a partir de texto/voz
+                    usando IA.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Lógica Cross-Form:</strong>
+                    Modelo de backend suporta <code>field2</code> para comparações entre variáveis de formulários
+                    diferentes.</li>
+            </ul>
+
+            <h3>5.5 Relatórios e Dashboard</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Dashboard
+                        Interativo:</strong> Resumo visual dos problemas (gráficos, estatísticas).</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Navegador de
+                        Queries:</strong> Visualização paginada de todas as queries geradas com filtros.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Exportação PDF:</strong>
+                    Geração de relatório profissional.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Exportação JSON:</strong>
+                    Exportação de dados brutos para ferramentas externas.</li>
+                <li class="task-list-item"><input type="checkbox" checked disabled> <strong>Design System:</strong> UI
+                    consistente baseada em glassmorphism e estética moderna.</li>
+            </ul>
+
+            <h2>6. Arquitetura Técnica</h2>
+            <ul>
+                <li><strong>Backend:</strong> Python (Flask)</li>
+                <li><strong>Banco de Dados:</strong> Supabase (PostgreSQL)</li>
+                <li><strong>Frontend:</strong> HTML5, CSS3 (Design System Customizado), JavaScript (Vanilla + Chart.js)
+                </li>
+                <li><strong>Motor de IA:</strong> Orquestração LangChain com Anthropic Claude 3.5 Sonnet</li>
+                <li><strong>Integração:</strong> REDCap PyCap / API Padrão</li>
+            </ul>
+
+            <h2>7. Requisitos Não Funcionais</h2>
+            <ul>
+                <li><strong>Performance:</strong> A análise de projetos padrão (<5000 registros) deve ser concluída em
+                        <30 segundos.</li>
+                <li><strong>Segurança:</strong> Os Tokens de API nunca devem ser armazenados permanentemente sem
+                    criptografia.</li>
+                <li><strong>Usabilidade:</strong> A interface deve suportar Modos Claro/Escuro e ser responsiva.</li>
+                <li><strong>Compliance:</strong> A saída deve ser adequada para documentação de Boas Práticas Clínicas
+                    (GCP).</li>
+            </ul>
+
+            <h2>8. Roadmap e Melhorias Futuras</h2>
+
+            <h3>Fase 1: Polimento de UX/UI (Foco Atual)</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Ícones:</strong> Substituir emojis
+                    por Phosphor Icons/Heroicons para um visual profissional.</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Contraste:</strong> Melhorar
+                    acessibilidade e taxas de contraste no Modo Claro.</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Micro-interações:</strong> Adicionar
+                    estados de carregamento e efeitos de hover para melhor "sensação".</li>
+            </ul>
+
+            <h3>Fase 2: IA Avançada e Automação</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Voz-para-Regra:</strong> Permitir
+                    que usuários ditem regras via microfone.</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Upload Automático de
+                        Queries:</strong> Postar automaticamente queries específicas geradas de volta no REDCap (Write
+                    API).</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Sistema Multi-Agente:</strong>
+                    Implementar agentes especializados para diferentes domínios (Oncologia, Cardiologia).</li>
+            </ul>
+
+            <h3>Fase 3: Escala SaaS</h3>
+            <ul>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Integração Stripe:</strong> Gestão
+                    de assinaturas.</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Colaboração em Equipe:</strong>
+                    Projetos compartilhados e comentários dentro do Audit PRO.</li>
+                <li class="task-list-item"><input type="checkbox" disabled> <strong>Webhooks de API:</strong> Disparar
+                    análise automaticamente quando dados são inseridos no REDCap.</li>
+            </ul>
+
+            <h2>9. Métricas de Sucesso</h2>
+            <ul>
+                <li><strong>Taxa de Ativação:</strong> % de cadastros que executam pelo menos uma análise.</li>
+                <li><strong>Retenção:</strong> % of usuários retornando para auditorias semanais/mensais.</li>
+                <li><strong>Geração de Regras:</strong> % de regras geradas por IA bem-sucedidas vs. edições manuais.
+                </li>
+            </ul>
+        </section>
+    </div>
+</body>
+
+</html>

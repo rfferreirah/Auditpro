@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap Detalhado | Audit PRO</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --surface-color: #1a1d23;
+            --surface-hover: #242930;
+            --border-color: #2d3139;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+
+            /* Phase Colors */
+            --phase1-color: #00d26a;
+            /* Green: Immediate */
+            --phase2-color: #3b82f6;
+            /* Blue: SaaS */
+            --phase3-color: #8b5cf6;
+            /* Purple: Enterprise */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .brand-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 80px 0 60px;
+            background: linear-gradient(180deg, rgba(0, 210, 106, 0.05) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        h1 span {
+            color: var(--phase1-color);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Navigation / Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--surface-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Roadmap Grid */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 60px 0;
+            position: relative;
+        }
+
+        /* Connecting Line (Desktop only) */
+        .roadmap-grid::before {
+            content: '';
+            position: absolute;
+            top: 60px;
+            /* Aligns with top of cards */
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--surface-color);
+            z-index: 0;
+            display: none;
+            /* Hidden for now, cleaner look without */
+        }
+
+        .phase-col {
+            position: relative;
+            z-index: 1;
+        }
+
+        .phase-header {
+            background: var(--surface-color);
+            padding: 24px;
+            border-radius: 16px 16px 0 0;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .p1 .phase-header::after {
+            background: var(--phase1-color);
+        }
+
+        .p2 .phase-header::after {
+            background: var(--phase2-color);
+        }
+
+        .p3 .phase-header::after {
+            background: var(--phase3-color);
+        }
+
+        .phase-title {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .phase-time {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .p1 .phase-title {
+            color: var(--phase1-color);
+        }
+
+        .p2 .phase-title {
+            color: var(--phase2-color);
+        }
+
+        .p3 .phase-title {
+            color: var(--phase3-color);
+        }
+
+        .phase-body {
+            background: rgba(26, 29, 35, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 16px 16px;
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        .feature-group {
+            margin-bottom: 32px;
+        }
+
+        .group-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        .group-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            transition: 0.2s;
+            background: var(--surface-color);
+        }
+
+        .feature-item:hover {
+            transform: translateX(5px);
+            background: var(--surface-hover);
+        }
+
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+
+        .feature-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #333;
+            color: #aaa;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .badge-new {
+            background: rgba(0, 210, 106, 0.2);
+            color: var(--phase1-color);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .roadmap-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Audit <span>PRO</span> Roadmap</h1>
+            <p class="subtitle">Nossa visão técnica para transformar a auditoria de dados clínicos em uma experiência
+                autônoma e inteligente.</p>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="dot" style="background: var(--phase1-color)"></div> Fase 1: Usabilidade (Q1)
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background: var(--phase2-color)"></div> Fase 2: SaaS & Escala (Q2)
+                </div>
+                <div class="legend-item">
+                    <div class="dot" style="background: var(--phase3-color)"></div> Fase 3: Enterprise (Q3+)
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="roadmap-grid">
+
+            <!-- FASE 1 -->
+            <div class="phase-col p1">
+                <div class="phase-header">
+                    <div class="phase-title">Refinamento</div>
+                    <div class="phase-time">1 a 3 Meses</div>
+                </div>
+                <div class="phase-body">
+
+                    <div class="feature-group">
+                        <div class="group-title">🔌 Conectividade & Integração</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase1-color)">⚡</div>
+                            <div class="feature-content">
+                                <h4>Abertura Expressa de Queries</h4>
+                                <p>Botão para abrir Data Resolution Workflow direto da interface, sem navegar.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase1-color)">🧠</div>
+                            <div class="feature-content">
+                                <h4>Mapeamento Inteligente</h4>
+                                <p>IA detecta automaticamente campos de "Data de Nasc.", "Sexo" e "Consentimento".</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-group">
+                        <div class="group-title">🛠️ Ferramentas de Poder</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase1-color)">🎨</div>
+                            <div class="feature-content">
+                                <h4>Editor Visual No-Code <span class="badge badge-new">Novo</span></h4>
+                                <p>Crie regras arrastando blocos lógicos. "Se [Idade] < 18..."</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase1-color)">📋</div>
+                            <div class="feature-content">
+                                <h4>Biblioteca de Regras</h4>
+                                <p>Templates prontos para sinais vitais impossíveis e erros de datas comuns.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FASE 2 -->
+            <div class="phase-col p2">
+                <div class="phase-header">
+                    <div class="phase-title">SaaS & Escala</div>
+                    <div class="phase-time">3 a 6 Meses</div>
+                </div>
+                <div class="phase-body">
+
+                    <div class="feature-group">
+                        <div class="group-title">🏢 Arquitetura Multi-Tenant</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase2-color)">🔐</div>
+                            <div class="feature-content">
+                                <h4>Autenticação Robusta</h4>
+                                <p>Login seguro com Auth0, suporte a 2FA e gestão de múltiplos usuários.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase2-color)">📂</div>
+                            <div class="feature-content">
+                                <h4>Gestão Multi-Projeto</h4>
+                                <p>Aterne entre "Estudo Cardio" e "Estudo Onco" em um clique.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-group">
+                        <div class="group-title">🚀 Produtividade em Massa</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase2-color)">🌍</div>
+                            <div class="feature-content">
+                                <h4>Regras Globais</h4>
+                                <p>Aplique uma regra de validação em 50 projetos simultaneamente.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase2-color)">🔔</div>
+                            <div class="feature-content">
+                                <h4>Alertas Inteligentes</h4>
+                                <p>Notificação semanal por email sobre a saúde dos dados de cada centro.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FASE 3 -->
+            <div class="phase-col p3">
+                <div class="phase-header">
+                    <div class="phase-title">Enterprise</div>
+                    <div class="phase-time">6 Meses +</div>
+                </div>
+                <div class="phase-body">
+
+                    <div class="feature-group">
+                        <div class="group-title">🛡️ Governança & Compliance</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase3-color)">📜</div>
+                            <div class="feature-content">
+                                <h4>Audit Trail (21 CFR Part 11)</h4>
+                                <p>Log imutável de todas as ações de usuários e alterações de regras.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase3-color)">🕵️</div>
+                            <div class="feature-content">
+                                <h4>Anonimização de PHI</h4>
+                                <p>Garantia técnica de que nunhum dado sensível é persistido.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-group">
+                        <div class="group-title">🤖 IA Avançada</div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase3-color)">🚨</div>
+                            <div class="feature-content">
+                                <h4>Detecção de Fraude</h4>
+                                <p>Padrões de digitação humanos suspeitos e valores repetidos.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="icon-box" style="color: var(--phase3-color)">💊</div>
+                            <div class="feature-content">
+                                <h4>Medical Coding Assistant</h4>
+                                <p>Sugestão automática de códigos MedDRA para Eventos Adversos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Audit PRO. Este roteiro é uma declaração de direção e está sujeito a alterações.</p>
+    </footer>
+
+</body>
+
+</html>
