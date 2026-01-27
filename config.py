@@ -14,7 +14,7 @@ load_dotenv()
 # === REDCap API Configuration ===
 REDCAP_API_URL = os.getenv("REDCAP_API_URL", "")
 REDCAP_API_TOKEN = os.getenv("REDCAP_API_TOKEN", "")
-REDCAP_TIMEOUT = int(os.getenv("REDCAP_TIMEOUT", "30"))
+REDCAP_TIMEOUT = int(os.getenv("REDCAP_TIMEOUT", "120"))
 
 # === AI Configuration ===
 AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").lower() # 'anthropic' or 'openai'

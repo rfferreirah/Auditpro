@@ -35,7 +35,7 @@ class REDCapClient:
         timeout: Timeout para requisições em segundos
     """
     
-    def __init__(self, api_url: str, token: str, timeout: int = 30):
+    def __init__(self, api_url: str, token: str, timeout: int = 120):
         """
         Inicializa o cliente REDCap.
         
