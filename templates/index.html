@@ -1109,6 +1109,9 @@
             // Query table
             updateQueryTable(data.queries);
 
+            // Fetch filter options for popovers
+            fetchFilterOptions();
+
             // Scroll to results
             resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
