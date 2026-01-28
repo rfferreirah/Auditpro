@@ -1,6 +1,6 @@
 # REDCap Insight Agent (BI & Reporting)
 **Conceito, Funcionalidades e Roadmap Técnico**
-
+ 
 ## 1. O Conceito
 A ideia é criar um **Agente de Inteligência de Negócios (BI)** integrado ao AuditPRO. Enquanto o AuditPRO cuida da *Qualidade* (erros, discrepâncias), o **Insight Agent** cuidará da *Visualização e Interpretação* (tendências, progressos, estatísticas).
 

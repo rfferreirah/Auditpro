@@ -341,7 +341,10 @@ def get_queries_page():
             return True
         text_val = str(text_val).lower()
         search_terms = [t.strip() for t in filter_input.split(',')]
-        # Retorna True se qualquer termo estiver contido no valor (Lógica OR)
+        # DEBUG LOG
+        # res = any(term in text_val for term in search_terms if term)
+        # if filter_input and 'missing' in filter_input:  # Reduce noise, only log relevant
+        #     print(f"DEBUG_FILTER: Check '{text_val}' vs {search_terms} -> {res}", flush=True)
         return any(term in text_val for term in search_terms if term)
 
     if filter_record_id:
