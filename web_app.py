@@ -478,36 +478,41 @@ def analyze():
         
         # If project_id is missing (session lost?), try to save project again
         if user_id and not project_id:
-             project_id = db.save_project(
-                user_id=user_id,
-                project_title=project_info.get('project_title', 'Projeto REDCap'),
-                api_url=api_url,
-                redcap_project_id=project_info.get('project_id'),
-                is_longitudinal=project_info.get('is_longitudinal', False),
-                token=token
-            )
+            try:
+                project_id = db.save_project(
+                    user_id=user_id,
+                    project_title=project_info.get('project_title', 'Projeto REDCap'),
+                    api_url=api_url,
+                    redcap_project_id=project_info.get('project_id'),
+                    is_longitudinal=project_info.get('is_longitudinal', False),
+                    token=token
+                )
+            except Exception as db_err:
+                print(f"[WARN] Erro ao salvar projeto no analyze: {db_err}", flush=True)
+                project_id = None
             
         if user_id and project_id:
-            analysis_id = db.save_analysis(   
-                user_id=user_id,
-                project_id=project_id,
-                report=report,
-                ai_analysis_used=False, # Initial run without AI
-                duration_ms=duration_ms,
-                token=token,
-                project_title=project_info.get('project_title', 'Projeto sem título')
-            )
-            
-            # Update counts
-            db.update_analysis_counts(
-                analysis_id,
-                high=priority_counts.get('Alta', 0),
-                medium=priority_counts.get('Média', 0),
-                low=priority_counts.get('Baixa', 0),
-                token=token
-            )
-            
+            try:
+                analysis_id = db.save_analysis(   
+                    user_id=user_id,
+                    project_id=project_id,
+                    report=report,
+                    ai_analysis_used=False,
+                    duration_ms=duration_ms,
+                    token=token,
+                    project_title=project_info.get('project_title', 'Projeto sem título')
+                )
                 
+                # Update counts
+                db.update_analysis_counts(
+                    analysis_id,
+                    high=priority_counts.get('Alta', 0),
+                    medium=priority_counts.get('Média', 0),
+                    low=priority_counts.get('Baixa', 0),
+                    token=token
+                )
+            except Exception as db_err:
+                print(f"[WARN] Erro ao salvar análise no DB: {db_err}", flush=True)
                 
         if user_id:
             ctx_update['project_id'] = project_id
