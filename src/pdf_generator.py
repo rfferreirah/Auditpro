@@ -6,10 +6,13 @@ Gerador de relatórios PDF profissionais e estruturados.
 
 import io
 import html
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from collections import Counter
 from typing import Optional
+
+# Timezone de Brasília (UTC-3)
+TZ_BRASILIA = timezone(timedelta(hours=-3))
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -127,8 +130,8 @@ class PDFReportGenerator:
             self.styles['CustomSubtitle']
         ))
         
-        # Date and User
-        date_str = datetime.now().strftime('%d/%m/%Y às %H:%M')
+        # Date and User - Usa timezone de Brasília
+        date_str = datetime.now(TZ_BRASILIA).strftime('%d/%m/%Y às %H:%M')
         elements.append(Paragraph(
             f"Gerado em: {date_str}<br/>Gerado por: {self.user_name}",
             self.styles['CustomSubtitle']
