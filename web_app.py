@@ -1021,6 +1021,80 @@ def get_project_fields():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/events', methods=['GET'])
+@login_required
+def get_project_events():
+    """Retorna lista de eventos do projeto para regras Cross-Event."""
+    try:
+        user_id = session.get('user_id')
+        ctx = get_analysis_context(user_id)
+        
+        # Check cached events first
+        if ctx and ctx.get('project_events'):
+            return jsonify({
+                'success': True,
+                'events': ctx.get('project_events')
+            })
+        
+        # Use client from context or reconstruct from session
+        client = ctx.get('client') if ctx else None
+        
+        if not client:
+            api_url = session.get('api_url')
+            api_token = session.get('api_token')
+            if api_url and api_token:
+                try:
+                    client = REDCapClient(api_url, api_token)
+                except Exception as e:
+                    print(f"Error reconstructing client: {e}")
+            
+        if not client:
+            return jsonify({'success': False, 'error': 'Conexão não estabelecida. Teste a conexão novamente.'}), 400
+        
+        # Fetch events (only works for longitudinal projects)
+        try:
+            events = client.export_events()
+            
+            events_list = []
+            for evt in events:
+                if hasattr(evt, 'unique_event_name'):
+                    events_list.append({
+                        'unique_event_name': evt.unique_event_name,
+                        'event_name': getattr(evt, 'event_name', evt.unique_event_name)
+                    })
+                elif isinstance(evt, dict):
+                    events_list.append({
+                        'unique_event_name': evt.get('unique_event_name', ''),
+                        'event_name': evt.get('event_name', evt.get('unique_event_name', ''))
+                    })
+            
+            # Cache for future use
+            if ctx is None:
+                ctx = {}
+            ctx['project_events'] = events_list
+            update_analysis_context(user_id, ctx)
+                
+            return jsonify({
+                'success': True,
+                'count': len(events_list),
+                'events': events_list
+            })
+        except Exception as e:
+            # Non-longitudinal projects won't have events, return empty list
+            print(f"Note: Project may not be longitudinal: {e}")
+            return jsonify({
+                'success': True,
+                'count': 0,
+                'events': [],
+                'note': 'Project may not be longitudinal or events are not available.'
+            })
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/debug/fields', methods=['GET'])
 @login_required
 def debug_fields():

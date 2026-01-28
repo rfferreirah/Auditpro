@@ -66,6 +66,14 @@ class CustomRulesAnalyzer(BaseAnalyzer):
         record_id_field = self.get_record_id_field()
         event_field = self.get_event_field()
         
+        # Índice de registros por (record_id, event) para busca eficiente em Cross-Event
+        self.records_index = {}
+        for rec in self.project_data.records:
+            rid = rec.get(record_id_field, "UNKNOWN")
+            evt = rec.get(event_field, "")
+            key = (rid, evt)
+            self.records_index[key] = rec
+        
         for record in self.project_data.records:
             record_id = record.get(record_id_field, "UNKNOWN")
             event = record.get(event_field, "")
@@ -119,6 +127,8 @@ class CustomRulesAnalyzer(BaseAnalyzer):
             violation = self._check_comparison(field_value, rule)
         elif rule.rule_type == "cross_field":
             violation = self._check_cross_field(record, rule, target_field)
+        elif rule.rule_type == "cross_event":
+            violation = self._check_cross_event(record_id, event, record, rule, target_field)
         elif rule.rule_type == "regex":
             violation = self._check_regex(field_value, rule)
         elif rule.rule_type == "condition":
@@ -254,6 +264,68 @@ class CustomRulesAnalyzer(BaseAnalyzer):
         elif operator == "!=":
             return value1 == value2
         return False
+    
+    def _check_cross_event(self, record_id: str, current_event: str, record: dict, rule, target_field: str = None) -> bool:
+        """
+        Verifica comparação entre campos de diferentes eventos.
+        
+        A regra deve ter:
+        - field: campo no evento 1
+        - field2: campo no evento 2
+        - event1: nome do evento 1 (origem)
+        - event2: nome do evento 2 (destino)
+        - operator: operador de comparação
+        
+        Retorna True se a regra for VIOLADA.
+        """
+        # Verifica se a configuração está completa
+        if not rule.field2 or not rule.event2:
+            return False
+        
+        # Define os eventos
+        event1 = rule.event1 or current_event  # Se não especificado, usa o evento atual
+        event2 = rule.event2
+        
+        # Só processa se o registro atual é do evento 1
+        if event1 and current_event != event1:
+            return False
+        
+        actual_field = target_field if target_field else rule.field
+        
+        # Busca o valor do campo 1 no registro atual (evento 1)
+        value1 = record.get(actual_field)
+        
+        # Busca o registro do evento 2 para este participante
+        key2 = (record_id, event2)
+        record2 = self.records_index.get(key2)
+        
+        if not record2:
+            # Registro do evento 2 não encontrado (pode ser que o participante ainda não chegou nesse evento)
+            return False
+        
+        # Busca o valor do campo 2 no registro do evento 2
+        value2 = record2.get(rule.field2)
+        
+        # Se qualquer valor está vazio, não há violação
+        if self.is_empty(value1) or self.is_empty(value2):
+            return False
+        
+        # Tenta comparar como datas primeiro
+        date1 = self.parse_date(value1)
+        date2 = self.parse_date(value2)
+        
+        if date1 and date2:
+            return self._compare_values_cross(date1, rule.operator, date2)
+        
+        # Tenta como números
+        num1 = self.parse_number(value1)
+        num2 = self.parse_number(value2)
+        
+        if num1 is not None and num2 is not None:
+            return self._compare_values_cross(num1, rule.operator, num2)
+        
+        # Compara como strings
+        return self._compare_values_cross(str(value1), rule.operator, str(value2))
     
     def _check_regex(self, value, rule) -> bool:
         """Verifica se valor corresponde à expressão regular."""

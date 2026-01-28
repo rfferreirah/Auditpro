@@ -27,6 +27,10 @@ class CustomRule:
         message: str = "",
         enabled: bool = True,
         field2: Optional[str] = None,
+        event1: Optional[str] = None,
+        event2: Optional[str] = None,
+        form1: Optional[str] = None,
+        form2: Optional[str] = None,
         created_at: Optional[str] = None,
         updated_at: Optional[str] = None,
     ):
@@ -40,6 +44,10 @@ class CustomRule:
         self.message = message
         self.enabled = enabled
         self.field2 = field2  # Para regras cross_field
+        self.event1 = event1  # Evento do campo 1 (para cross_event)
+        self.event2 = event2  # Evento do campo 2 (para cross_event)
+        self.form1 = form1    # Formulário do campo 1
+        self.form2 = form2    # Formulário do campo 2
         self.created_at = created_at or datetime.now().isoformat()
         self.updated_at = updated_at or datetime.now().isoformat()
     
@@ -56,6 +64,10 @@ class CustomRule:
             "message": self.message,
             "enabled": self.enabled,
             "field2": self.field2,
+            "event1": self.event1,
+            "event2": self.event2,
+            "form1": self.form1,
+            "form2": self.form2,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -74,6 +86,10 @@ class CustomRule:
             message=data.get("message", ""),
             enabled=data.get("enabled", True),
             field2=data.get("field2"),
+            event1=data.get("event1"),
+            event2=data.get("event2"),
+            form1=data.get("form1"),
+            form2=data.get("form2"),
             created_at=data.get("created_at"),
             updated_at=data.get("updated_at"),
         )

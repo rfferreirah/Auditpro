@@ -657,6 +657,7 @@
                                     <option value="comparison">Comparação Simples</option>
                                     <option value="range">Range (Min/Max)</option>
                                     <option value="cross_field">Comparação entre Campos</option>
+                                    <option value="cross_event">Cross-Event (Entre Eventos)</option>
                                     <option value="regex">Expressão Regular</option>
                                     <option value="condition">Condicional (SE-ENTÃO)</option>
                                     <option value="uniqueness">Unicidade (Sem Duplicatas)</option>
@@ -686,6 +687,55 @@
                                 <option value="">Selecione um campo...</option>
                                 <!-- Options populated via JS -->
                             </select>
+                        </div>
+
+                        <!-- Cross-Event Section -->
+                        <div id="crossEventGroup" class="card"
+                            style="display: none; margin-bottom: 1rem; padding: 1rem; background: var(--bg-tertiary); border: 1px dashed var(--primary);">
+                            <h4 style="color: var(--primary); margin-bottom: 1rem; font-size: 0.95rem;">
+                                <i class="ph ph-git-branch"></i> Configuração Cross-Event
+                            </h4>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                Compare campos entre diferentes eventos/visitas do mesmo participante.
+                            </p>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="ruleEvent1" style="font-size: 0.85rem;">Evento do Campo 1</label>
+                                    <select id="ruleEvent1">
+                                        <option value="">Selecione o evento...</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ruleForm1" style="font-size: 0.85rem;">Formulário do Campo 1</label>
+                                    <select id="ruleForm1">
+                                        <option value="">Todos os formulários</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; color: var(--text-secondary); padding: 0.5rem;">
+                                <i class="ph ph-arrows-down-up" style="font-size: 1.2rem;"></i>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="ruleEvent2" style="font-size: 0.85rem;">Evento do Campo 2 *</label>
+                                    <select id="ruleEvent2" required>
+                                        <option value="">Selecione o evento...</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ruleForm2" style="font-size: 0.85rem;">Formulário do Campo 2</label>
+                                    <select id="ruleForm2">
+                                        <option value="">Todos os formulários</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -1183,6 +1233,7 @@
             rulesModal.classList.add('show');
             loadRules();
             loadProjectFields(); // Load fields for dropdown
+            loadProjectEvents(); // Load events for cross-event rules
         });
 
         // Close modal and enable Analyze button
@@ -1236,15 +1287,25 @@
         // Rule type change - show/hide relevant fields
         ruleType.addEventListener('change', () => {
             const type = ruleType.value;
+            const isCrossType = type === 'cross_field' || type === 'cross_event';
+
             document.getElementById('rangeGroup').style.display = type === 'range' ? 'block' : 'none';
             document.getElementById('ruleValueGroup').style.display = type === 'range' ? 'none' : 'block';
-            document.getElementById('ruleField2Group').style.display = type === 'cross_field' ? 'block' : 'none';
+            document.getElementById('ruleField2Group').style.display = isCrossType ? 'block' : 'none';
+            document.getElementById('crossEventGroup').style.display = type === 'cross_event' ? 'block' : 'none';
+
+            // Esconde o campo de valor para cross_field e cross_event (usam field2)
+            if (isCrossType) {
+                document.getElementById('ruleValueGroup').style.display = 'none';
+            }
         });
 
         // Load rules from API
         // Store rules globally for optimistic updates
         let currentRules = [];
         let projectFields = []; // Cache project fields
+        let projectEvents = []; // Cache project events (for longitudinal projects)
+        let projectForms = [];  // Cache project forms
 
         // Load project fields for dropdown
         async function loadProjectFields() {
@@ -1255,10 +1316,66 @@
                 if (data.success && data.fields) {
                     projectFields = data.fields;
                     populateFieldDropdowns();
+
+                    // Extract unique forms from fields
+                    const formsSet = new Set();
+                    data.fields.forEach(f => {
+                        if (f.form_name) formsSet.add(f.form_name);
+                    });
+                    projectForms = Array.from(formsSet);
+                    populateFormDropdowns();
                 }
             } catch (error) {
                 console.error('Erro ao carregar campos:', error);
             }
+        }
+
+        // Load project events for longitudinal projects
+        async function loadProjectEvents() {
+            try {
+                const response = await fetch('/api/events');
+                const data = await response.json();
+
+                if (data.success && data.events) {
+                    projectEvents = data.events;
+                    populateEventDropdowns();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                // Non-longitudinal projects won't have events, this is OK
+            }
+        }
+
+        // Populate event dropdowns
+        function populateEventDropdowns() {
+            const event1 = document.getElementById('ruleEvent1');
+            const event2 = document.getElementById('ruleEvent2');
+
+            const defaultOption = '<option value="">Selecione o evento...</option>';
+            event1.innerHTML = defaultOption;
+            event2.innerHTML = defaultOption;
+
+            projectEvents.forEach(evt => {
+                const label = evt.event_name || evt.unique_event_name || evt;
+                const value = evt.unique_event_name || evt;
+                event1.innerHTML += `<option value="${value}">${label}</option>`;
+                event2.innerHTML += `<option value="${value}">${label}</option>`;
+            });
+        }
+
+        // Populate form dropdowns
+        function populateFormDropdowns() {
+            const form1 = document.getElementById('ruleForm1');
+            const form2 = document.getElementById('ruleForm2');
+
+            const defaultOption = '<option value="">Todos os formulários</option>';
+            form1.innerHTML = defaultOption;
+            form2.innerHTML = defaultOption;
+
+            projectForms.forEach(formName => {
+                form1.innerHTML += `<option value="${formName}">${formName}</option>`;
+                form2.innerHTML += `<option value="${formName}">${formName}</option>`;
+            });
         }
 
         // PopulateFieldDropdowns
@@ -1307,6 +1424,10 @@
                 return `range: ${JSON.stringify(rule.value)}`;
             } else if (rule.rule_type === 'cross_field') {
                 return `${rule.operator} campo [${rule.field2}]`;
+            } else if (rule.rule_type === 'cross_event') {
+                const evt1 = rule.event1 || '(atual)';
+                const evt2 = rule.event2 || '?';
+                return `[${evt1}] ${rule.operator} [${evt2}].${rule.field2}`;
             } else if (rule.rule_type === 'regex') {
                 return `regex: ${rule.value}`;
             } else if (rule.rule_type === 'condition') {
@@ -1363,6 +1484,13 @@
             document.getElementById('rangeGroup').style.display = 'none';
             document.getElementById('ruleValueGroup').style.display = 'block';
             document.getElementById('ruleField2Group').style.display = 'none';
+            document.getElementById('crossEventGroup').style.display = 'none';
+
+            // Reset event fields
+            document.getElementById('ruleEvent1').value = '';
+            document.getElementById('ruleEvent2').value = '';
+            document.getElementById('ruleForm1').value = '';
+            document.getElementById('ruleForm2').value = '';
 
             // If editing, populate form
             if (rule) {
@@ -1387,8 +1515,17 @@
                     document.getElementById('ruleValue').value = rule.value || '';
                 }
 
-                if (rule.rule_type === 'cross_field') {
+                if (rule.rule_type === 'cross_field' || rule.rule_type === 'cross_event') {
                     document.getElementById('ruleField2Group').style.display = 'block';
+                }
+
+                // Populate cross-event fields
+                if (rule.rule_type === 'cross_event') {
+                    document.getElementById('crossEventGroup').style.display = 'block';
+                    document.getElementById('ruleEvent1').value = rule.event1 || '';
+                    document.getElementById('ruleEvent2').value = rule.event2 || '';
+                    document.getElementById('ruleForm1').value = rule.form1 || '';
+                    document.getElementById('ruleForm2').value = rule.form2 || '';
                 }
 
                 // Trigger change to update UI
@@ -1508,7 +1645,12 @@
                 operator: document.getElementById('ruleOperator').value,
                 value: value,
                 priority: document.getElementById('rulePriority').value,
-                message: document.getElementById('ruleMessage').value
+                message: document.getElementById('ruleMessage').value,
+                // Cross-Event fields
+                event1: document.getElementById('ruleEvent1').value || null,
+                event2: document.getElementById('ruleEvent2').value || null,
+                form1: document.getElementById('ruleForm1').value || null,
+                form2: document.getElementById('ruleForm2').value || null
             };
 
             try {
