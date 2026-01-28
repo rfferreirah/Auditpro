@@ -357,19 +357,31 @@ def get_queries_page():
     if filter_issue_type:
          queries = [q for q in queries if check_filter(q.issue_type or '', filter_issue_type)]
 
-    # 3. Busca Global (Aprimorada)
+    import unicodedata
+    def remove_accents(input_str):
+        if not input_str: return ""
+        nfkd_form = unicodedata.normalize('NFKD', str(input_str))
+        return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
+
+    # 3. Busca Global Expandida (com remoção de acentos)
     if search_term:
+        print(f"[DEBUG search] Searching for: '{search_term}' | Page Size: {page_size}", flush=True)
+        search_normalized = remove_accents(search_term)
+        
+        def match_field(val):
+            return search_normalized in remove_accents(val)
+
         queries = [
             q for q in queries 
-            if search_term in str(q.record_id).lower() or 
-               search_term in (q.event or '').lower() or
-               search_term in q.field.lower() or 
-               search_term in field_labels.get(q.field, "").lower() or
-               search_term in str(q.value_found or '').lower() or
-               search_term in (q.issue_type or '').lower() or
-               search_term in (q.explanation or '').lower() or
-               search_term in (q.priority or '').lower() or
-               search_term in (q.suggested_action or '').lower()
+            if match_field(q.record_id) or 
+               match_field(q.event) or
+               match_field(q.field) or 
+               match_field(field_labels.get(q.field, "")) or
+               match_field(q.value_found) or
+               match_field(q.issue_type) or
+               match_field(q.explanation) or
+               match_field(q.priority) or
+               match_field(q.suggested_action)
         ]
     
     # Calcula paginação
