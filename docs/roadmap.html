@@ -4,516 +4,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REDCap Data Quality Intelligence - Roadmap</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>AuditPRO V2 - Roadmap Técnico</title>
     <style>
-        :root {
-            --primary: #2c5282;
-            --primary-light: #4299e1;
-            --success: #38a169;
-            --warning: #d69e2e;
-            --danger: #c53030;
-            --bg-dark: #1a202c;
-            --bg-card: #2d3748;
-            --bg-input: #4a5568;
-            --text-primary: #f7fafc;
-            --text-secondary: #a0aec0;
-            --border: #4a5568;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-            min-height: 100vh;
-            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-light), var(--success));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
-        .version-badge {
-            display: inline-block;
-            background: var(--primary);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-        }
-
-        .section {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-icon {
-            font-size: 1.5rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
         }
 
         h2 {
-            font-size: 1.4rem;
-            font-weight: 600;
+            color: #2980b9;
+            margin-top: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
         }
 
-        .feature-grid {
-            display: grid;
-            gap: 1rem;
+        h3 {
+            color: #16a085;
+            margin-top: 25px;
         }
 
-        .feature-card {
-            background: var(--bg-input);
-            border-radius: 12px;
-            padding: 1.25rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+        p,
+        li {
+            color: #555;
         }
 
-        .feature-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            color: #e74c3c;
         }
 
-        .feature-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
         }
 
-        .feature-content h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
         }
 
-        .feature-content p {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+        .phase-block {
+            background: #e8f6f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 5px solid #1abc9c;
         }
 
-        .effort-badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .phase-title {
+            font-weight: bold;
+            color: #16a085;
+            display: block;
+            margin-bottom: 5px;
         }
 
-        .effort-low {
-            background: rgba(56, 161, 105, 0.2);
-            color: #9ae6b4;
+        .sql-block {
+            margin-top: 20px;
         }
 
-        .effort-medium {
-            background: rgba(214, 158, 46, 0.2);
-            color: #faf089;
-        }
-
-        .effort-high {
-            background: rgba(197, 48, 48, 0.2);
-            color: #feb2b2;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.2rem 0.6rem;
-            border-radius: 9999px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
-        }
-
-        .status-planned {
-            background: rgba(66, 153, 225, 0.2);
-            color: #90cdf4;
-        }
-
-        .status-progress {
-            background: rgba(214, 158, 46, 0.2);
-            color: #faf089;
-        }
-
-        .status-done {
-            background: rgba(56, 161, 105, 0.2);
-            color: #9ae6b4;
-        }
-
-        .current-features {
-            margin-bottom: 3rem;
-        }
-
-        .current-features h2 {
-            margin-bottom: 1rem;
-        }
-
-        .check-list {
-            list-style: none;
-        }
-
-        .check-list li {
-            padding: 0.5rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .check-list li::before {
-            content: "✅";
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        footer a {
-            color: var(--primary-light);
+        .print-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
             text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
         }
 
-        .priority-legend {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+        .print-btn:hover {
+            background: #2980b9;
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <header>
-            <h1>🔬 REDCap Data Quality Intelligence</h1>
-            <p>Roadmap de Funcionalidades</p>
-            <span class="version-badge">v1.0.0 - Janeiro 2026</span>
-        </header>
+        <button class="print-btn" onclick="window.print()">Imprimir como PDF</button>
 
-        <!-- Funcionalidades Atuais -->
-        <div class="section current-features">
-            <div class="section-header">
-                <span class="section-icon">✅</span>
-                <h2>Funcionalidades Implementadas</h2>
-            </div>
-            <ul class="check-list">
-                <li>Conexão com API REDCap</li>
-                <li>4 Analisadores (Estrutural, Temporal, Clínico, Operacional)</li>
-                <li>Interface Web Visual com tema escuro</li>
-                <li>Relatório PDF profissional</li>
-                <li>Export JSON detalhado</li>
-                <li>Paginação e filtros por prioridade</li>
-                <li>Link direto para verificação no REDCap</li>
-                <li>Grau de modificação (Simples/Moderada/Complexa)</li>
-                <li>Integração LangChain + Claude (IA)</li>
-            </ul>
+        <h1>AuditPRO V2 - Roadmap Técnico & Especificação</h1>
+
+        <p><strong>Data:</strong> 28 de Janeiro de 2026</p>
+        <p>Este documento descreve a arquitetura técnica e o plano de implementação para transformar a ferramenta atual
+            em um "Assistente de Qualidade de Dados" completo.</p>
+
+        <h2>1. Resumo Executivo</h2>
+        <p>O backend atual, construído em <strong>Python (Flask)</strong> e <strong>Supabase (PostgreSQL)</strong>,
+            fornece uma base sólida. A maioria das novas features requer expansão do schema do banco de dados e
+            integração de bibliotecas Python específicas (scikit-learn, APScheduler).</p>
+
+        <h2>2. Análise de Gap & Atualizações de Arquitetura</h2>
+
+        <h3>2.1 Dashboard & Visualização</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> Tabela <code>analysis_history</code> existe.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li>Criar endpoint <code>/api/analytics/dashboard</code> para agregar dados históricos.</li>
+                    <li>Frontend: Instalar Chart.js. Implementar views de tendência.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>2.2 Machine Learning (Detecção de Anomalias)</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> Inexistente.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li>Novo módulo <code>src/ml_engine.py</code> usando <code>scikit-learn</code> (IsolationForest).
+                    </li>
+                    <li>Nova tabela <code>ml_models</code> para armazenar modelos treinados.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>2.3 IA Avançada (Chat with Data)</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> LangChain integrado.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li><strong>RAG:</strong> Ingestão de metadados e resultados no Supabase <code>pgvector</code>.</li>
+                    <li>Endpoint de Chat para perguntas em linguagem natural sobre o dataset.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>2.4 Automação & Agendamento</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> Execução manual.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li>Integrar <code>APScheduler</code>.</li>
+                    <li>Nova tabela <code>scheduled_jobs</code>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>2.5 Gestão de Workflow</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> Queries salvas com status básico.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li>Adicionar colunas: <code>assigned_to</code>, <code>resolution_notes</code>.</li>
+                    <li>Endpoints para atribuição e resolução.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>2.6 Segurança Corporativa (RBAC)</h3>
+        <ul>
+            <li><strong>Estado Atual:</strong> Modelo de dono único.</li>
+            <li><strong>Mudanças Necessárias:</strong>
+                <ul>
+                    <li>Nova tabela <code>project_members</code> com papéis (Admin, Editor, Leitor).</li>
+                    <li>Atualizar queries para respeitar permissões de membro.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h2>3. Plano de Implementação</h2>
+
+        <div class="phase-block">
+            <span class="phase-title">Fase 1: Workflow e Visualização (Valor Imediato)</span>
+            Implementação dos Dashboards e do sistema de Atribuição/Resolução de queries. É a funcionalidade mais
+            visível para o usuário final.
         </div>
 
-        <!-- Dashboard e Visualização -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">📊</span>
-                <h2>Dashboard e Visualização</h2>
-            </div>
-            <div class="priority-legend">
-                <div class="legend-item"><span class="effort-badge effort-low">Baixo</span> = 1-2 dias</div>
-                <div class="legend-item"><span class="effort-badge effort-medium">Médio</span> = 3-5 dias</div>
-                <div class="legend-item"><span class="effort-badge effort-high">Alto</span> = 1+ semana</div>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">📈</span>
-                    <div class="feature-content">
-                        <h3>Gráficos Interativos</h3>
-                        <p>Charts de pizza e barras mostrando distribuição de erros por tipo, prioridade e participante.
-                            Usando Chart.js.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📅</span>
-                    <div class="feature-content">
-                        <h3>Timeline de Qualidade</h3>
-                        <p>Gráfico temporal mostrando evolução da qualidade dos dados ao longo do tempo. Compare
-                            análises anteriores.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🗺️</span>
-                    <div class="feature-content">
-                        <h3>Heatmap de Campos</h3>
-                        <p>Visualização de quais campos têm mais problemas por evento. Identifique padrões rapidamente.
-                        </p>
-                        <span class="effort-badge effort-high">Alto</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-            </div>
+        <div class="phase-block">
+            <span class="phase-title">Fase 2: Automação</span>
+            Configuração do APScheduler e sistema de Alertas por Email. Garante recorrência do uso.
         </div>
 
-        <!-- IA Avançada -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">🤖</span>
-                <h2>IA Avançada (LangChain + Claude)</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">💡</span>
-                    <div class="feature-content">
-                        <h3>Sugestões Automáticas de Correção</h3>
-                        <p>IA analisa padrões e sugere o valor correto para campos com erros. Machine learning aplicado.
-                        </p>
-                        <span class="effort-badge effort-high">Alto</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🎯</span>
-                    <div class="feature-content">
-                        <h3>Detecção de Anomalias ML</h3>
-                        <p>Modelo treinado para detectar outliers e valores suspeitos que escapam das regras
-                            tradicionais.</p>
-                        <span class="effort-badge effort-high">Alto</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">💬</span>
-                    <div class="feature-content">
-                        <h3>Chat com os Dados</h3>
-                        <p>Pergunte ao agente sobre seus dados em linguagem natural. "Quais participantes têm mais
-                            erros?"</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📝</span>
-                    <div class="feature-content">
-                        <h3>Resumo Executivo Automático</h3>
-                        <p>Claude gera relatório executivo para o Investigador Principal com insights e recomendações.
-                        </p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-progress">Em Progresso</span>
-                    </div>
-                </div>
-            </div>
+        <div class="phase-block">
+            <span class="phase-title">Fase 3: Deep Tech (ML & IA)</span>
+            Treinamento dos modelos de Isolation Forest e implementação do Chat com Dados (Vector Search).
         </div>
 
-        <!-- Automação e Notificações -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">📧</span>
-                <h2>Automação e Notificações</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">⏰</span>
-                    <div class="feature-content">
-                        <h3>Agendamento de Análises</h3>
-                        <p>Execute análises automaticamente (diário, semanal). Scheduler integrado com cron jobs.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">✉️</span>
-                    <div class="feature-content">
-                        <h3>Alertas por Email</h3>
-                        <p>Notificar equipe quando novas queries críticas surgirem. Resumo diário de pendências.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">💼</span>
-                    <div class="feature-content">
-                        <h3>Integração Slack/Teams</h3>
-                        <p>Notificações em tempo real no chat da equipe. Webhooks para alertas importantes.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-            </div>
+        <div class="phase-block">
+            <span class="phase-title">Fase 4: Enterprise (RBAC & Audit)</span>
+            Refatoração para múltiplos usuários por projeto e logs imutáveis (Compliance).
         </div>
 
-        <!-- Gestão de Queries -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">📋</span>
-                <h2>Gestão de Queries</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">☑️</span>
-                    <div class="feature-content">
-                        <h3>Marcar como Resolvido</h3>
-                        <p>Checkbox para marcar queries já corrigidas. Acompanhe o progresso da limpeza de dados.</p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">👤</span>
-                    <div class="feature-content">
-                        <h3>Atribuir Responsável</h3>
-                        <p>Designar membro da equipe para cada query. Workflow de revisão e aprovação.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📊</span>
-                    <div class="feature-content">
-                        <h3>Histórico de Análises</h3>
-                        <p>Compare análises anteriores. Veja o progresso da qualidade ao longo do tempo.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📑</span>
-                    <div class="feature-content">
-                        <h3>Exportar para Excel</h3>
-                        <p>Além de PDF/JSON, exportar planilha Excel organizada por prioridade e tipo.</p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <h2>4. Script de Migração (Supabase)</h2>
+        <div class="sql-block">
+            <pre><code>-- 1. Workflow de Queries
+ALTER TABLE saved_queries 
+ADD COLUMN assigned_to UUID REFERENCES auth.users(id),
+ADD COLUMN resolution_notes TEXT,
+ADD COLUMN history JSONB DEFAULT '[]';
 
-        <!-- Segurança e Multi-usuário -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">🔐</span>
-                <h2>Segurança e Multi-usuário</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🔑</span>
-                    <div class="feature-content">
-                        <h3>Login/Autenticação</h3>
-                        <p>Controle de acesso por usuário. Integração com LDAP/SSO institucional.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📁</span>
-                    <div class="feature-content">
-                        <h3>Múltiplos Projetos</h3>
-                        <p>Gerenciar vários projetos REDCap simultaneamente. Dashboard unificado.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📜</span>
-                    <div class="feature-content">
-                        <h3>Auditoria de Uso</h3>
-                        <p>Log de quem acessou o sistema e quando. Compliance com boas práticas.</p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+-- 2. Agendamento
+CREATE TABLE scheduled_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID REFERENCES projects(id),
+    schedule_type TEXT CHECK (schedule_type IN ('daily', 'weekly')),
+    next_run TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true,
+    recipients JSONB
+);
 
-        <!-- UX/UI -->
-        <div class="section">
-            <div class="section-header">
-                <span class="section-icon">📱</span>
-                <h2>Melhorias de UX/UI</h2>
-            </div>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🌙</span>
-                    <div class="feature-content">
-                        <h3>Modo Escuro/Claro</h3>
-                        <p>Toggle de tema para preferência do usuário. Salva preferência no navegador.</p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📲</span>
-                    <div class="feature-content">
-                        <h3>PWA (Progressive Web App)</h3>
-                        <p>App instalável no desktop ou celular. Funciona offline para visualização.</p>
-                        <span class="effort-badge effort-medium">Médio</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🔍</span>
-                    <div class="feature-content">
-                        <h3>Busca/Filtro Avançado</h3>
-                        <p>Buscar por ID do participante, campo específico, texto do erro, etc.</p>
-                        <span class="effort-badge effort-low">Baixo</span>
-                        <span class="status-badge status-planned">Planejado</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+-- 3. Controle de Acesso (RBAC)
+CREATE TABLE project_members (
+    project_id UUID REFERENCES projects(id),
+    user_id UUID REFERENCES auth.users(id),
+    role TEXT CHECK (role IN ('owner', 'editor', 'viewer')),
+    PRIMARY KEY (project_id, user_id)
+);
 
-        <footer>
-            <p>REDCap Data Quality Intelligence Agent © 2026</p>
-            <p>Desenvolvido para auxiliar pesquisadores clínicos na gestão de qualidade de dados</p>
-        </footer>
+-- 4. ML Models
+CREATE TABLE ml_models (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID REFERENCES projects(id),
+    model_type TEXT,
+    serialized_model BYTEA
+);</code></pre>
+        </div>
     </div>
 </body>
 
