@@ -20,6 +20,23 @@ class AuthManager:
         """Check if Supabase is properly configured"""
         return bool(self.client)
 
+    def get_oauth_url(self, provider):
+        """Get OAuth URL for provider"""
+        if not self.client:
+            return None
+            
+        try:
+            res = self.client.auth.sign_in_with_oauth({
+                "provider": provider,
+                "options": {
+                    "redirect_to": f"{os.getenv('SUPABASE_APP_URL', 'http://localhost:5000')}/auth/callback"
+                }
+            })
+            return res.url
+        except Exception as e:
+            print(f"Error getting OAuth URL: {e}")
+            return None
+
     def login(self, email, password):
         """Authenticate user with email and password via Supabase"""
         if not self.client:
@@ -130,6 +147,32 @@ class AuthManager:
             elif "rate limit" in error_msg.lower():
                 error_msg = "Muitas tentativas. Aguarde um momento e tente novamente."
             return {"success": False, "error": error_msg}
+
+    def set_session(self, access_token, refresh_token=None):
+        """Set session from access token (OAuth flow)"""
+        if not self.client:
+            return {"success": False, "error": "Supabase authentication not configured"}
+            
+        try:
+            # Get user info using the token
+            user_response = self.client.auth.get_user(access_token)
+            
+            if user_response and user_response.user:
+                session['user_id'] = user_response.user.id
+                session['user_email'] = user_response.user.email
+                meta = user_response.user.user_metadata or {}
+                session['user_name'] = meta.get('full_name') or user_response.user.email.split('@')[0]
+                session['access_token'] = access_token
+                
+                # Optionally store refresh token if needed for persistent sessions
+                if refresh_token:
+                    session['refresh_token'] = refresh_token
+                    
+                return {"success": True, "user": user_response.user}
+                
+            return {"success": False, "error": "Invalid token"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
 # Singleton instance
 auth_manager = AuthManager()

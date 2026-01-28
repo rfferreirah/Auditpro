@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Processando Login...</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #111;
+            color: #fff;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="spinner"></div>
+    <h3>Conectando com Google...</h3>
+    <p id="status">Aguarde um momento.</p>
+
+    <script>
+        // Supabase Auth sends the session in the URL hash fragment
+        // #access_token=...&refresh_token=...&expires_in=...&token_type=bearer&type=recovery
+
+        function processHash() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+
+            if (accessToken) {
+                document.getElementById('status').innerText = 'Autenticado! Redirecionando...';
+
+                // Send token to backend to set session cookie
+                fetch('/auth/set_session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = '/';
+                        } else {
+                            document.getElementById('status').innerText = 'Erro ao criar sessão: ' + data.error;
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('status').innerText = 'Erro de conexão: ' + error;
+                    });
+
+            } else {
+                // Check if we have an error parameter in the URL (e.g., query string)
+                const urlParams = new URLSearchParams(window.location.search);
+                const error = urlParams.get('error_description') || urlParams.get('error');
+
+                if (error) {
+                    document.getElementById('status').innerText = 'Erro no login: ' + error;
+                    setTimeout(() => window.location.href = '/login', 3000);
+                } else {
+                    // Maybe we are already logged in or visited directly?
+                    // Redirect to index just in case
+                    window.location.href = '/login';
+                }
+            }
+        }
+
+        processHash();
+    </script>
+</body>
+
+</html>

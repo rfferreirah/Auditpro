@@ -97,6 +97,40 @@ def login():
             
     return render_template('login.html')
 
+@app.route('/login/google')
+def login_google():
+    """Iniciar login com Google"""
+    auth_url = auth_manager.get_oauth_url('google')
+    if auth_url:
+        return redirect(auth_url)
+    flash('Erro ao iniciar login com Google. Verifique a configuração do Supabase.', 'error')
+    return redirect(url_for('login'))
+
+@app.route('/auth/callback')
+def auth_callback():
+    """Callback do Supabase OAuth"""
+    # Em um fluxo PKCE real, o Supabase redireciona com o token no hash da URL (#access_token=...)
+    # O backend Flask não vê o hash da URL.
+    # O fluxo correto com SSR + Supabase Auth geralmente requer que o redirecionamento vá para uma página frontend
+    # que captura o hash e envia para o backend, OU usar o fluxo de Code Exchange.
+    
+    # Para simplificar neste MVP, vamos redirecionar para uma página de "Processando Login..."
+    # que captura o token do hash e envia para uma rota de set-session via POST.
+    return render_template('auth_callback.html')
+
+@app.route('/auth/set_session', methods=['POST'])
+def auth_set_session():
+    """Define a sessão Flask a partir do token recebido do frontend"""
+    data = request.get_json()
+    access_token = data.get('access_token')
+    refresh_token = data.get('refresh_token')
+    
+    if not access_token:
+        return {"success": False, "error": "Token ausente"}, 400
+        
+    result = auth_manager.set_session(access_token, refresh_token)
+    return result
+
 
 @app.route('/logout')
 def logout():

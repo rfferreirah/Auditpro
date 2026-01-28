@@ -91,6 +91,10 @@
         .password-toggle:hover {
             color: var(--primary);
         }
+
+        .input-wrapper .password-toggle {
+            pointer-events: auto;
+        }
     </style>
 </head>
 
@@ -137,6 +141,13 @@
                 style="width: 100%; margin-top: 1rem; justify-content: center;">
                 <i class="ph ph-sign-in"></i> Entrar
             </button>
+
+            <div style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-secondary);">OU</div>
+
+            <a href="{{ url_for('login_google') }}" class="btn btn-secondary"
+                style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                <i class="ph ph-google-logo" style="color: #DB4437;"></i> Entrar com Google
+            </a>
         </form>
 
         <div class="login-footer">
