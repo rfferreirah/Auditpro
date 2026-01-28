@@ -183,15 +183,25 @@ def test_connection():
         print(f"[DEBUG test-connection] Connection OK, fetching project info...", flush=True)
         project_info = client.export_project_info()
         
-            # Persiste o client no contexto do usuário
+        # Persiste o client no contexto do usuário
         user_id = session.get('user_id')
         token = session.get('access_token')
         
-        # Prepara dados para o contexto
+        # IMPORTANTE: Limpa cache antigo ao conectar a um novo projeto
+        # Isso evita que dados do projeto anterior fiquem persistidos
+        if user_id and user_id in analysis_cache:
+            print(f"[DEBUG test-connection] Clearing previous cache for user {user_id[:8]}...", flush=True)
+            del analysis_cache[user_id]
+        
+        # Prepara dados para o contexto (iniciando do zero)
         context_update = {
             'client': client,
             'project_name': project_info.get('project_title', 'Projeto REDCap'),
-            'user_id': user_id
+            'user_id': user_id,
+            'report': None,
+            'queries': [],
+            'field_labels': {},
+            'field_names': []
         }
         
         project_id = None
