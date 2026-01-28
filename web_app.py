@@ -411,10 +411,11 @@ def analyze():
     global analysis_cache
     
     try:
-        data = request.get_json()
-        # Tenta pegar do payload ou variáveis de ambiente (fallback)
-        api_url = data.get('api_url', '').strip() or os.getenv('REDCAP_API_URL')
-        api_token = data.get('api_token', '').strip() or os.getenv('REDCAP_API_TOKEN')
+        data = request.get_json() or {}
+        
+        # Prioridade: Session > Payload > Env
+        api_url = session.get('api_url') or data.get('api_url', '').strip() or os.getenv('REDCAP_API_URL')
+        api_token = session.get('api_token') or data.get('api_token', '').strip() or os.getenv('REDCAP_API_TOKEN')
         include_logs = data.get('include_logs', False)
         structural_checks = data.get('structural_checks', None)
         
