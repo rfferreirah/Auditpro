@@ -157,6 +157,15 @@ def design_system():
     return render_template('design-system.html')
 
 
+@app.after_request
+def add_header(response):
+    """Adiciona headers para evitar cache agressivo (corrige problema de updates de UI)."""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
+
 @app.route('/api/test-connection', methods=['POST'])
 def test_connection():
     """Testa conexão com a API REDCap."""
@@ -358,7 +367,9 @@ def get_queries_page():
                search_term in field_labels.get(q.field, "").lower() or
                search_term in str(q.value_found or '').lower() or
                search_term in (q.issue_type or '').lower() or
-               search_term in (q.explanation or '').lower()
+               search_term in (q.explanation or '').lower() or
+               search_term in (q.priority or '').lower() or
+               search_term in (q.suggested_action or '').lower()
         ]
     
     # Calcula paginação
