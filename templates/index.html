@@ -723,7 +723,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="ruleEvent2" style="font-size: 0.85rem;">Evento do Campo 2 *</label>
-                                    <select id="ruleEvent2" required>
+                                    <select id="ruleEvent2">
                                         <option value="">Selecione o evento...</option>
                                         <!-- Populated dynamically -->
                                     </select>
@@ -1283,7 +1283,6 @@
         document.getElementById('cancelRuleBtn').addEventListener('click', () => {
             showRulesList();
         });
-
         // Rule type change - show/hide relevant fields
         ruleType.addEventListener('change', () => {
             const type = ruleType.value;
@@ -1293,6 +1292,17 @@
             document.getElementById('ruleValueGroup').style.display = type === 'range' ? 'none' : 'block';
             document.getElementById('ruleField2Group').style.display = isCrossType ? 'block' : 'none';
             document.getElementById('crossEventGroup').style.display = type === 'cross_event' ? 'block' : 'none';
+
+            // Manage required attributes
+            const event2 = document.getElementById('ruleEvent2');
+            const field2 = document.getElementById('ruleField2');
+
+            if (type === 'cross_event') {
+                event2.setAttribute('required', 'required');
+                field2.removeAttribute('required'); // field2 is optional/implied in some contexts but let's keep it safe
+            } else {
+                event2.removeAttribute('required');
+            }
 
             // Esconde o campo de valor para cross_field e cross_event (usam field2)
             if (isCrossType) {
