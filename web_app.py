@@ -891,27 +891,36 @@ def get_rule(rule_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/generate-rule', methods=['POST'])
+@app.route('/api/rules/generate', methods=['POST'])
 @login_required
 def generate_rule():
     """Gera uma regra a partir de linguagem natural usando IA."""
     try:
+        user_id = session.get('user_id') # Ensure user_id is fetched
         data = request.json
         text = data.get('text')
         
         if not text:
             return jsonify({'success': False, 'error': 'Texto da regra é obrigatório'}), 400
             
-        # Tenta obter nomes dos campos do projeto atual para dar contexto à IA
+        # Contexto: Campos
         project_fields = []
-        # Tentar ler metadados do projeto se tivermos em cache ou DB
-        # Simplificação: Passamos vazio por enquanto ou tentamos carregar do DB se necessário
+        ctx = get_analysis_context(user_id)
+        if ctx and ctx.get('field_names'):
+            project_fields = ctx.get('field_names')
+            
+        # Contexto: Eventos (Novo)
+        project_events = []
+        if ctx and ctx.get('project_events'):
+            # Extract simple names
+            project_events = [e['unique_event_name'] for e in ctx['project_events']]
         
         ai = AIAnalyzer()
         if not ai.is_available:
              return jsonify({'success': False, 'error': 'IA não configurada no servidor (API Key ausente).'}), 503
         
-        result = ai.parse_natural_language_rule(text, project_fields)
+        # Passa ambos os contextos
+        result = ai.parse_natural_language_rule(text, project_fields, project_events)
         
         if result['success']:
             return jsonify({

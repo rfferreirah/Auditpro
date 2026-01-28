@@ -303,13 +303,14 @@ para o investigador principal de um estudo. Seja conciso e profissional."""),
             "sample_queries": sample_queries_text,
         }
 
-    def parse_natural_language_rule(self, text: str, field_list: list[str] = None) -> dict:
+    def parse_natural_language_rule(self, text: str, field_list: list[str] = None, event_list: list[str] = None) -> dict:
         """
         Interpreta uma regra em linguagem natural e converte para JSON estruturado.
         
         Args:
             text: Texto da regra (ex: "A idade deve ser maior que 18")
             field_list: Lista opcional de nomes de variáveis do projeto
+            event_list: Lista opcional de nomes de eventos (para cross-event)
             
         Returns:
             Dicionário com a estrutura da regra ou erro
@@ -324,13 +325,23 @@ para o investigador principal de um estudo. Seja conciso e profissional."""),
         if field_list:
             # Limita a 500 campos para não estourar o contexto
             fields_str = ", ".join(field_list[:500])
-            context_str = f"""
-CONTEXTO DO PROJETO:
+            context_str += f"""
+CONTEXTO - CAMPOS:
 Abaixo estão os nomes reais das variáveis (campos) no banco de dados.
 Sempre que possível, use um valor desta lista para o campo 'field'.
 Se o usuário disser "idade", e na lista tiver "age_years", use "age_years".
 
 Campos Disponíveis: [{fields_str}]
+"""
+
+        if event_list:
+            events_str = ", ".join(event_list[:100])
+            context_str += f"""
+CONTEXTO - EVENTOS:
+Abaixo estão os nomes únicos dos eventos (visitas) no projeto.
+Use estes nomes exatos para 'event1' e 'event2' em regras Cross-Event.
+
+Eventos Disponíveis: [{events_str}]
 """
 
         # Build prompt using string concatenation to safely handle JSON braces
@@ -346,45 +357,43 @@ Campos Disponíveis: [{fields_str}]
         {{
             "name": "Nome curto e descritivo da regra",
             "field": "nome_do_campo_snake_case (se 'todo o projeto', use '_ALL_')",
-            "rule_type": "comparison" | "range" | "regex" | "condition" | "uniqueness" | "cross_field",
+            "rule_type": "comparison" | "range" | "regex" | "condition" | "uniqueness" | "cross_event",
             "operator": "=" | "!=" | ">" | "<" | ">=" | "<=" | "between" | "matches" | "contains" | "unique" | "empty" | "not_empty" | "present_implies",
-            "value": "valor da regra (ver formatos abaixo)",
+            "value": "valor da regra (para cross_event, é o nome do segundo campo)",
             "priority": "Alta" | "Média" | "Baixa",
-            "message": "Mensagem de erro amigável pro usuário"
+            "message": "Mensagem de erro amigável pro usuário",
+            "event1": "Nome do evento do primeiro campo (opcional, só para cross_event)",
+            "event2": "Nome do evento do segundo campo (opcional, só para cross_event)"
         }}
         
-        INSTRUÇÃO ESPECIAL (WILDCARD):
-        Se o usuário pedir para verificar "todo o projeto", "todos os campos", "campos em branco geral" ou similar,
-        defina "field": "_ALL_"
-
-        BIBLIOTECA DE PADRÕES INTELIGENTES (Use se o usuário não especificar):
-        1. CPF: rule_type="regex", operator="matches", value="^\\d{{3}}\\.\\d{{3}}\\.\\d{{3}}-\\d{{2}}$"
-        2. DATES (Futuro): rule_type="comparison", operator="<=", value="TODAY" (para nascimento/visita passada)
-        3. DATES (Passado): rule_type="comparison", operator=">=", value="TODAY" (para agendamento futuro)
-        4. EMAIL: rule_type="regex", operator="matches", value="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{{2,}}$"
-        5. LÓGICA CRUZADA (Cross-field):
-           - "Se X for Sim, Y não pode ser vazio" -> rule_type="condition", operator="not_empty", value="{{'if_field': 'X', 'if_value': 'Sim'}}"
-           - "Data Alta > Data Internação" -> rule_type="cross_field", operator=">", value="data_internacao"
-
+        BIBLIOTECA DE PADRÕES INTELIGENTES:
+        1. COMPARAÇÃO SIMPLES: rule_type="comparison", operator="=", value="X"
+        2. RANGE NUMÉRICO: rule_type="range", operator="between", value="min,max"
+        3. FORMATO (Regex): rule_type="regex", operator="matches", value="pattern"
+        4. CROSS-EVENT (Entre Visitas):
+           - "O peso na Semana 4 deve ser menor que na Triagem"
+           - JSON: {{
+               "name": "Peso Semana 4 < Triagem",
+               "field": "weight",
+               "rule_type": "cross_event",
+               "operator": "<",
+               "value": "weight", 
+               "event1": "week_4_arm_1", 
+               "event2": "screening_arm_1",
+               "priority": "Média",
+               "message": "Perda de peso esperada não observada"
+             }}
+           
         Exemplos Avançados:
         
         User: "O CPF deve ter formato válido"
         JSON: {{"name": "Formato CPF", "field": "cpf", "rule_type": "regex", "operator": "matches", "value": "^\\d{{3}}\\.\\d{{3}}\\.\\d{{3}}-\\d{{2}}$", "priority": "Alta", "message": "CPF fora do padrão XXX.XXX.XXX-XX"}}
 
-        User: "Data de nascimento não pode ser futura"
-        JSON: {{"name": "Nascimento Futuro", "field": "dob", "rule_type": "comparison", "operator": "<=", "value": "TODAY", "priority": "Alta", "message": "Data de nascimento não pode ser no futuro"}}
+        User: "A data da alta deve ser posterior a data de admissão"
+        JSON: {{"name": "Consistência de Datas", "field": "dt_alta", "rule_type": "comparison", "operator": ">", "value": "dt_admissao", "priority": "Alta", "message": "Data de alta deve ser posterior à admissão"}}
         
-        User: "Se o paciente teve alta, a data da alta é obrigatória"
-        JSON: {{"name": "Data Alta Obrigatória", "field": "dt_alta", "rule_type": "condition", "operator": "not_empty", "value": "{{\"if_field\": \"status_alta\", \"if_value\": \"Sim\"}}", "priority": "Alta", "message": "Data da alta deve ser preenchida se paciente teve alta"}}
-
-        User: "Verificar campos faltantes em todo o projeto"
-        JSON: {{"name": "Campos Faltantes (Geral)", "field": "_ALL_", "rule_type": "condition", "operator": "empty", "value": "true", "priority": "Alta", "message": "Campo obrigatório não preenchido"}}
-
-        User: "O peso precisa estar entre 30 e 200"
-        JSON: {{"name": "Range de Peso", "field": "weight", "rule_type": "range", "operator": "between", "value": "30,200", "priority": "Média", "message": "Peso fora dos limites permitidos (30-200)"}}
-
-        User: "Data de alta deve ser posterior à admissão"
-        JSON: {{"name": "Consistência de Datas", "field": "dt_alta", "rule_type": "cross_field", "operator": ">", "value": "dt_admissao", "priority": "Alta", "message": "Data de alta anterior à admissão"}}
+        User: "No evento Follow-up, o status deve ser Completo"
+        JSON: {{"name": "Status em Follow-up", "field": "status", "rule_type": "comparison", "operator": "=", "value": "Completo", "event1": "follow_up_arm_1", "priority": "Média", "message": "Status incorreto no Follow-up"}}
         """
         
         full_system_message = system_intro + system_context + schema_def
