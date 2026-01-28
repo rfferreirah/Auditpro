@@ -774,9 +774,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="ruleForm1" style="font-size: 0.85rem;">Formulário do Campo 1</label>
-                                    <select id="ruleForm1">
-                                        <option value="">Todos os formulários</option>
+                                    <label for="crossField1" style="font-size: 0.85rem;">Campo 1 (opcional)</label>
+                                    <select id="crossField1">
+                                        <option value="">Igual ao campo principal</option>
                                         <!-- Populated dynamically -->
                                     </select>
                                 </div>
@@ -795,9 +795,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="ruleForm2" style="font-size: 0.85rem;">Formulário do Campo 2</label>
-                                    <select id="ruleForm2">
-                                        <option value="">Todos os formulários</option>
+                                    <label for="crossField2" style="font-size: 0.85rem;">Campo 2</label>
+                                    <select id="crossField2">
+                                        <option value="">Selecione um campo...</option>
                                         <!-- Populated dynamically -->
                                     </select>
                                 </div>
@@ -1449,20 +1449,22 @@
             });
         }
 
-        // Populate form dropdowns
-        function populateFormDropdowns() {
-            const form1 = document.getElementById('ruleForm1');
-            const form2 = document.getElementById('ruleForm2');
+        // Populate Cross-Event Fields
+        function populateCrossEventFields() {
+            const f1 = document.getElementById('crossField1');
+            const f2 = document.getElementById('crossField2');
 
-            const defaultOption = '<option value="">Todos os formulários</option>';
-            form1.innerHTML = defaultOption;
-            form2.innerHTML = defaultOption;
+            f1.innerHTML = '<option value="">Igual ao campo principal</option>';
+            f2.innerHTML = '<option value="">Selecione um campo...</option>';
 
-            projectForms.forEach(formName => {
-                form1.innerHTML += `<option value="${formName}">${formName}</option>`;
-                form2.innerHTML += `<option value="${formName}">${formName}</option>`;
+            projectFields.forEach(f => {
+                const label = `${f.field_label} (${f.field_name})`;
+                const opt = `<option value="${f.field_name}">${label.substring(0, 60)}</option>`;
+                f1.innerHTML += opt;
+                f2.innerHTML += opt;
             });
         }
+
 
         // PopulateFieldDropdowns
         function populateFieldDropdowns() {
@@ -1601,17 +1603,25 @@
                     document.getElementById('ruleValue').value = rule.value || '';
                 }
 
-                if (rule.rule_type === 'cross_field' || rule.rule_type === 'cross_event') {
+                if (rule.rule_type === 'cross_field') {
                     document.getElementById('ruleField2Group').style.display = 'block';
                 }
 
                 // Populate cross-event fields
                 if (rule.rule_type === 'cross_event') {
                     document.getElementById('crossEventGroup').style.display = 'block';
+                    populateCrossEventFields(); // Ensure populated
+
                     document.getElementById('ruleEvent1').value = rule.event1 || '';
                     document.getElementById('ruleEvent2').value = rule.event2 || '';
-                    document.getElementById('ruleForm1').value = rule.form1 || '';
-                    document.getElementById('ruleForm2').value = rule.form2 || '';
+                    // Timeout to allow population if needed, but here we called it directly
+                    setTimeout(() => {
+                        if (rule.form1) document.getElementById('crossField1').value = rule.form1; // Mapping legacy form1 to new field1 if possible, or just ignore
+                        // Actually, backend might store field in rule.field, but for cross-event we might want to override?
+                        // If rule.field is used for event1, we might not need crossField1 unless it differs.
+                        // Let's assume crossField2 maps to rule.value (which holds the comparison field name).
+                        if (rule.value) document.getElementById('crossField2').value = rule.value;
+                    }, 100);
                 }
 
                 // Trigger change to update UI
@@ -1734,10 +1744,17 @@
                 message: document.getElementById('ruleMessage').value,
                 // Cross-Event fields
                 event1: document.getElementById('ruleEvent1').value || null,
-                event2: document.getElementById('ruleEvent2').value || null,
-                form1: document.getElementById('ruleForm1').value || null,
-                form2: document.getElementById('ruleForm2').value || null
+                event2: document.getElementById('ruleEvent2').value || null
             };
+
+            // Override for Cross-Event with new Field Selectors
+            if (type === 'cross_event') {
+                const cf1 = document.getElementById('crossField1').value;
+                if (cf1) ruleData.field = cf1;
+
+                const cf2 = document.getElementById('crossField2').value;
+                if (cf2) ruleData.value = cf2;
+            }
 
             try {
                 let response;
