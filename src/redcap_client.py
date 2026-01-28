@@ -261,7 +261,8 @@ class REDCapClient:
     
     def test_connection(self) -> bool:
         """
-        Testa a conexão com a API REDCap.
+        Testa a conexão com a API REDCap de forma rápida.
+        Usa a chamada 'version' que é a mais leve possível.
         
         Returns:
             True se a conexão for bem-sucedida
@@ -270,8 +271,23 @@ class REDCapClient:
             REDCapAPIError: Se houver erro na conexão
         """
         try:
-            self.export_project_info()
+            # Usa timeout curto para teste rápido
+            payload = {
+                'token': self.token,
+                'content': 'version',
+                'format': 'json'
+            }
+            response = requests.post(
+                self.api_url,
+                data=payload,
+                timeout=30  # Timeout curto para teste
+            )
+            response.raise_for_status()
             return True
+        except requests.exceptions.Timeout:
+            raise REDCapAPIError("Timeout: O servidor REDCap não respondeu em 30 segundos.")
+        except requests.exceptions.ConnectionError as e:
+            raise REDCapAPIError(f"Erro de conexão: {e}")
         except Exception as e:
             raise REDCapAPIError(f"Falha ao testar conexão: {e}")
     

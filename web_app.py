@@ -173,10 +173,14 @@ def test_connection():
             }), 400
         
         # Debug: show what we're receiving (Safe logging)
-        if config.DEBUG:
-            print(f"\n[DEBUG test-connection] URL received", flush=True)
+        print(f"[DEBUG test-connection] Testing connection to REDCap...", flush=True)
         
+        # STEP 1: Quick connection test (uses lightweight 'version' API call)
         client = REDCapClient(api_url, api_token)
+        client.test_connection()  # Raises REDCapAPIError if fails
+        
+        # STEP 2: Only after connection confirmed, get project info
+        print(f"[DEBUG test-connection] Connection OK, fetching project info...", flush=True)
         project_info = client.export_project_info()
         
             # Persiste o client no contexto do usuário
