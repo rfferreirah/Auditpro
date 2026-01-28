@@ -205,6 +205,48 @@
         .popover-options label:hover {
             background: var(--bg-secondary);
         }
+
+        /* New Styles for Refactored UI */
+        .spinner-small {
+            border: 2px solid rgba(128, 128, 128, 0.2);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-icon-small {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-icon-small:hover {
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
+        }
+
+        .btn-icon-small:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .search-wrapper:focus-within i {
+            color: var(--primary) !important;
+        }
+
+        .search-wrapper:focus-within input {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+        }
     </style>
 </head>
 
@@ -426,6 +468,9 @@
                     <button id="downloadJson" class="btn btn-secondary">
                         <i class="ph ph-file-code" style="font-size: 1.2rem;"></i> Download JSON
                     </button>
+                    <button id="downloadCsv" class="btn btn-secondary">
+                        <i class="ph ph-table" style="font-size: 1.2rem;"></i> Download CSV
+                    </button>
                 </div>
             </div>
 
@@ -437,41 +482,61 @@
                 </h2>
 
                 <!-- Filtros e Paginação -->
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
-                    <div class="btn-group" id="priorityFilters" style="gap: 0.25rem;">
-                        <button class="btn btn-secondary active" data-filter="all"
-                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Todas</button>
-                        <button class="btn btn-secondary" data-filter="Alta"
-                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🔴 Alta</button>
-                        <button class="btn btn-secondary" data-filter="Média"
-                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🟡 Média</button>
-                        <button class="btn btn-secondary" data-filter="Baixa"
-                            style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">🟢 Baixa</button>
+                <!-- Filtros e Paginação (Refatorado) -->
+                <div class="filters-container"
+                    style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; background: var(--bg-secondary); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
+
+                    <!-- Filtros de Prioridade -->
+                    <div class="filter-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Prioridade:</span>
+                        <div class="btn-group" id="priorityFilters">
+                            <button class="btn btn-secondary active" data-filter="all">Todas</button>
+                            <button class="btn btn-secondary" data-filter="Alta">🔴 Alta</button>
+                            <button class="btn btn-secondary" data-filter="Média">🟡 Média</button>
+                            <button class="btn btn-secondary" data-filter="Baixa">🟢 Baixa</button>
+                        </div>
                     </div>
 
-                    <div style="position: relative; width: 140px;">
-                        <i class="ph ph-magnifying-glass"
-                            style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.85rem;"></i>
-                        <input type="text" id="querySearchInput" placeholder="Buscar..."
-                            style="padding-left: 1.8rem; margin-bottom: 0; height: 30px; font-size: 0.8rem; border-radius: 6px;">
-                    </div>
+                    <!-- Busca e Paginação -->
+                    <div class="search-pagination-group"
+                        style="display: flex; align-items: center; gap: 0.75rem; flex: 1; justify-content: flex-end;">
 
-                    <select id="pageSizeSelect" class="form-control"
-                        style="width: auto; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 0.8rem; height: 30px;">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="50" selected>50</option>
-                        <option value="100">100</option>
-                        <option value="1000000">Todas</option>
-                    </select>
+                        <!-- Busca Expandida -->
+                        <div class="search-wrapper" style="position: relative; flex: 1; max-width: 400px;">
+                            <i class="ph ph-magnifying-glass"
+                                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                            <input type="text" id="querySearchInput" placeholder="Buscar por ID, evento, erro, valor..."
+                                style="width: 100%; padding: 0.5rem 0.5rem 0.5rem 2.2rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); transition: border-color 0.2s;">
+                            <div id="searchSpinner" class="spinner-small"
+                                style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px;">
+                            </div>
+                        </div>
 
-                    <div id="paginationControls" style="display: flex; align-items: center; gap: 0.3rem;">
-                        <button id="prevPage" class="btn btn-secondary"
-                            style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">«</button>
-                        <span id="pageInfo" style="color: var(--text-secondary); font-size: 0.8rem;">1/1</span>
-                        <button id="nextPage" class="btn btn-secondary"
-                            style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">»</button>
+                        <!-- Tamanho da Página -->
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">Itens:</span>
+                            <select id="pageSizeSelect"
+                                style="padding: 0.4rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); cursor: pointer;">
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                                <option value="1000000">Todas</option>
+                            </select>
+                        </div>
+
+                        <!-- Controles Paginação -->
+                        <div id="paginationControls"
+                            style="display: flex; align-items: center; gap: 0.25rem; background: var(--bg-input); padding: 0.25rem; border-radius: 6px; border: 1px solid var(--border);">
+                            <button id="prevPage" class="btn-icon-small" title="Anterior"><i
+                                    class="ph ph-caret-left"></i></button>
+                            <span id="pageInfo"
+                                style="font-size: 0.85rem; padding: 0 0.5rem; font-weight: 500; min-width: 60px; text-align: center;">1/1</span>
+                            <button id="nextPage" class="btn-icon-small" title="Próximo"><i
+                                    class="ph ph-caret-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1057,6 +1122,10 @@
             window.location.href = '/api/download/json';
         });
 
+        document.getElementById('downloadCsv').addEventListener('click', () => {
+            window.location.href = '/api/download/csv';
+        });
+
         // Show status message
         function showStatus(message, type) {
             connectionStatus.textContent = message;
@@ -1075,12 +1144,15 @@
         let searchTimeout;
 
         querySearchInput.addEventListener('input', (e) => {
+            // Visual feedback immediately
+            document.getElementById('searchSpinner').style.display = 'block';
+
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 currentSearch = e.target.value.trim();
                 currentPage = 1;
                 loadPage(currentPage, currentFilter, currentPageSize, currentSearch);
-            }, 300); // Debounce 300ms
+            }, 500); // Debounce 500ms
         });
 
         // Page Size Selector
@@ -1138,6 +1210,9 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar página:', error);
+            } finally {
+                // Hide search spinner
+                document.getElementById('searchSpinner').style.display = 'none';
             }
         }
 

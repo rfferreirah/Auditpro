@@ -697,6 +697,81 @@ def download_json():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/download/csv')
+def download_csv():
+    """Download do relatório em CSV."""
+    user_id = session.get('user_id')
+    ctx = get_analysis_context(user_id)
+    
+    if not ctx or not ctx['report']:
+        return jsonify({'error': 'Nenhuma análise disponível'}), 400
+    
+    try:
+        import csv
+        from io import StringIO
+        
+        queries = ctx['queries']
+        field_labels = ctx.get('field_labels', {})
+        client = ctx.get('client')
+        
+        si = StringIO()
+        cw = csv.writer(si)
+        
+        # Headers
+        cw.writerow(['Record ID', 'Event', 'Instrument', 'Field', 'Field Label', 'Value', 'Issue Type', 'Priority', 'Explanation', 'Suggested Action', 'REDCap Link'])
+        
+        for q in queries:
+            # Generate Link
+            link = ""
+            if client:
+                 link = client.generate_field_url(
+                    record_id=q.record_id,
+                    event=q.event if q.event != "N/A" else "",
+                    instrument=q.instrument if q.instrument != "N/A" else "",
+                    field=q.field
+                )
+            
+            label = field_labels.get(q.field, "")
+            # Clean label
+            if label and '<' in label:
+                import re
+                label = re.sub(r'<[^>]*>', '', label)
+                
+            cw.writerow([
+                q.record_id,
+                q.event,
+                q.instrument,
+                q.field,
+                label,
+                q.value_found,
+                config.ISSUE_TYPES.get(q.issue_type, q.issue_type),
+                q.priority,
+                q.explanation,
+                q.suggested_action,
+                link
+            ])
+            
+        output = si.getvalue()
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"quality_report_{timestamp}.csv"
+        
+        # Add BOM for Excel compatibility with UTF-8
+        bom_output = '\ufeff' + output
+        
+        return Response(
+            bom_output,
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename={filename}'
+            }
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/queries/save', methods=['POST'])
 def save_query():
     """Salva uma query (bookmark/issue)."""
