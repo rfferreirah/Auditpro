@@ -121,20 +121,28 @@ def auth_callback():
 @app.route('/auth/set_session', methods=['POST'])
 def auth_set_session():
     """Define a sessão Flask a partir do token recebido do frontend"""
-    data = request.get_json()
-    access_token = data.get('access_token')
-    refresh_token = data.get('refresh_token')
-    code = data.get('code')
-    
-    if code:
-        # Auth Code Flow (PKCE/Server-side)
-        return auth_manager.exchange_code(code)
-    
-    if not access_token:
-        return {"success": False, "error": "Token ou Código ausente"}, 400
+    try:
+        data = request.get_json()
+        if not data:
+             return jsonify({"success": False, "error": "Invalid JSON"}), 400
+
+        access_token = data.get('access_token')
+        refresh_token = data.get('refresh_token')
+        code = data.get('code')
         
-    result = auth_manager.set_session(access_token, refresh_token)
-    return result
+        if code:
+            # Auth Code Flow (PKCE/Server-side)
+            result = auth_manager.exchange_code(code)
+            return jsonify(result)
+        
+        if not access_token:
+            return jsonify({"success": False, "error": "Token ou Código ausente"}), 400
+            
+        result = auth_manager.set_session(access_token, refresh_token)
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in auth_set_session: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/logout')
