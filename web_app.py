@@ -337,7 +337,7 @@ def _build_queries_page(queries, client, labels_map=None):
             'instrument': q.instrument,
             'field': q.field,
             'field_label': field_label,
-            'value': str(q.value_found) if q.value_found else 'N/A',
+            'value': str(q.value_found) if q.value_found is not None and str(q.value_found) != "" else 'N/A',
             'issue_type': config.ISSUE_TYPES.get(q.issue_type, q.issue_type),
             'explanation': q.explanation,
             'priority': q.priority,
