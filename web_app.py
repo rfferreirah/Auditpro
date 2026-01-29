@@ -375,12 +375,8 @@ def get_queries_page():
     filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
     filter_priority = request.args.get('filter_priority', '').strip().lower()
 
-    # DEBUG LOGS TO FILE
-    try:
-        with open('filter_debug.log', 'a') as f:
-             f.write(f"\n--- REQUEST {datetime.now()} ---\n")
-             f.write(f"PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'\n")
-    except: pass
+    # DEBUG LOGS
+    print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'", flush=True)
 
     queries = ctx['queries']
     client = ctx['client']
@@ -935,26 +931,14 @@ def create_rule():
         })
     except Exception as e:
         # Retry logic for JWT Expiration
-        error_msg = str(e)
-        print(f"DEBUG_JWT_CATCH: Error caught: {error_msg}")
-        
-        # Check for JWT expiration signatures
-        if "JWT expired" in error_msg or "PGRST303" in error_msg:
-            print(f"DEBUG_JWT: JWT expired detected in create_rule.")
-            
+        if "JWT expired" in str(e) or "PGRST303" in str(e):
             refresh_token = session.get('refresh_token')
-            print(f"DEBUG_JWT: Refresh token available? {'YES' if refresh_token else 'NO'}")
-            
             if refresh_token:
-                print("DEBUG_JWT: Attempting to refresh session...")
-                refresh_res = auth_manager.refresh_session(refresh_token)
-                print(f"DEBUG_JWT: Refresh success? {refresh_res.get('success')}")
-                
-                if refresh_res.get('success'):
-                    print("DEBUG_JWT: Token refreshed. Retrying 'add_rule'...")
-                    new_token = refresh_res['access_token']
+                res = auth_manager.refresh_session(refresh_token)
+                if res.get('success'):
                     try:
                         # Retry with new token
+                        new_token = res['access_token']
                         rule = rules_manager.add_rule(data, user_id, new_token)
                         
                         if rule:
@@ -962,15 +946,13 @@ def create_rule():
                              return jsonify({
                                 'success': True,
                                 'rule': rule.to_dict(),
-                                'message': 'Regra criada com sucesso (sessão restaurada)'
+                                'message': 'Regra criada com sucesso'
                              })
-                    except Exception as retry_e:
-                        print(f"DEBUG_JWT: Retry failed with error: {retry_e}")
-                        return jsonify({'success': False, 'error': f"Erro ao retentar: {str(retry_e)}"}), 500
+                    except Exception:
+                        pass # Fall through to generic error
             else:
-                 print("DEBUG_JWT: No refresh token found in session. User must login again.")
                  return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
-                 
+
         print(f"Erro ao criar regra: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
