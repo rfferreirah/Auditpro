@@ -1985,7 +1985,20 @@
                 checkbox.type = 'checkbox';
                 checkbox.value = value;
                 checkbox.style.margin = '0'; // Reset margin
-                checkbox.onchange = function () { updateHiddenInput(this); };
+
+                // FORCE BINDING
+                checkbox.addEventListener('change', function (e) {
+                    console.log("DEBUG: Evento change disparado via Listener", this.value);
+                    if (window.updateHiddenInput) {
+                        window.updateHiddenInput(this);
+                    } else {
+                        alert("ERRO CRITICO: updateHiddenInput não encontrado!");
+                    }
+                });
+                // Fallback click
+                checkbox.addEventListener('click', function (e) {
+                    e.stopPropagation(); // Ensure it doesn't close popover unexpectedly
+                });
 
                 labelEl.appendChild(checkbox);
                 labelEl.appendChild(document.createTextNode(label));
