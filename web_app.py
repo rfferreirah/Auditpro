@@ -484,13 +484,9 @@ def get_filter_options():
         return jsonify({'success': False, 'options': {}})
     
     try:
-    queries = ctx['queries']
-    field_labels = ctx.get('field_labels', {})
-except KeyError:
-    print("DEBUG: 'queries' not found in ctx", flush=True)
-    return jsonify({'success': False, 'options': {}})
-
-    
+        queries = ctx['queries']
+        field_labels = ctx.get('field_labels', {})
+        
         # Extrai valores únicos usando set
         record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))
         events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
@@ -510,10 +506,11 @@ except KeyError:
             'options': {
                 'record_id': record_ids,
                 'event_id': events,
-                'field': fields_data, # Lista de dicts
+                'field': fields_data, 
                 'value': values
             }
         })
+            
     except Exception as e:
         print(f"ERROR in get_filter_options: {e}", flush=True)
         import traceback
