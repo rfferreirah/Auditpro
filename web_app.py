@@ -489,21 +489,42 @@ def get_filter_options():
         queries = ctx['queries']
         field_labels = ctx.get('field_labels', {})
         
-        # Extrai valores únicos usando set
-        record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))
-        events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
-        fields = sorted(list(set(q.field for q in queries if q.field)))
-        # Para valores, verificamos explicitamente se não é None para incluir 0
-        values = set()
+        # OTIMIZAÇÃO: Loop único para evitar 4 iterações em lista gigante
+        # E Limite de itens para evitar OOM/Timeout em projetos grandes (17k+ items)
+        rec_set = set()
+        evt_set = set()
+        fld_set = set()
+        val_set = set()
+        
+        MAX_OPTIONS = 1000  # Limite de segurança para dropdowns
+        
         for q in queries:
             try:
-                if q.value_found is not None:
+                # Record ID
+                if q.record_id and len(rec_set) < MAX_OPTIONS:
+                    rec_set.add(str(q.record_id))
+                
+                # Event
+                if q.event and q.event != "N/A" and len(evt_set) < MAX_OPTIONS:
+                    evt_set.add(str(q.event))
+                    
+                # Field
+                if q.field and len(fld_set) < MAX_OPTIONS:
+                    fld_set.add(q.field)
+                    
+                # Value
+                if q.value_found is not None and len(val_set) < MAX_OPTIONS:
                      v_str = str(q.value_found)
                      if v_str != "":
-                         values.add(v_str)
+                         val_set.add(v_str)
             except:
                 pass
-        values = sorted(list(values))
+
+        # Converte para listas ordenadas
+        record_ids = sorted(list(rec_set))
+        events = sorted(list(evt_set))
+        fields = sorted(list(fld_set))
+        values = sorted(list(val_set))
         
         fields_data = []
         for f in fields:
@@ -515,10 +536,14 @@ def get_filter_options():
         return jsonify({
             'success': True,
             'options': {
-                'record_id': record_ids,
+                'record_id': record_ids if len(record_ids) < MAX_OPTIONS else record_ids + ["(Muitos itens...)"],
                 'event_id': events,
                 'field': fields_data, 
-                'value': values
+                'value': values if len(values) < MAX_OPTIONS else values + ["(Muitos itens...)"]
+            },
+            'meta': {
+                'total_queries': len(queries),
+                'truncated': len(queries) > MAX_OPTIONS
             }
         })
             
