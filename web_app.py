@@ -350,127 +350,136 @@ def _build_queries_page(queries, client, labels_map=None):
 @app.route('/api/queries', methods=['GET'])
 def get_queries_page():
     """Retorna página de queries com paginação."""
-    user_id = session.get('user_id')
-    ctx = get_analysis_context(user_id)
-    
-    if not ctx or not ctx['queries']:
-        return jsonify({'success': False, 'error': 'Execute uma análise primeiro'}), 400
-    
-    page = request.args.get('page', 1, type=int)
-    page_size = request.args.get('page_size', 50, type=int)
-    priority_filter = request.args.get('priority', None)
-    search_term = request.args.get('search', '').strip().lower()
-    
-    print(f"DEBUG_PAGINATION: Page={page}, Size={page_size}, Search='{search_term}'", flush=True)
-    print(f"DEBUG_FULL_ARGS: {dict(request.args)}", flush=True)
-    
-    queries = ctx['queries']
-    client = ctx['client']
-    field_labels = ctx.get('field_labels', {})
-    
-    # Captura filtros de coluna
-    filter_record_id = request.args.get('filter_record_id', '').strip().lower()
-    filter_event = request.args.get('filter_event_id', '').strip().lower()
-    filter_field = request.args.get('filter_field', '').strip().lower()
-    filter_value = request.args.get('filter_value', '').strip().lower()
-    filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
-    filter_priority = request.args.get('filter_priority', '').strip().lower()
-
-    # DEBUG LOGS
-    print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'", flush=True)
-
-    
-    # 1. Filtra por prioridade (Botões Superiores)
-    if priority_filter and priority_filter.lower() in ['alta', 'média', 'baixa', 'media']:
-        # Mapa para normalizar
-        norm_map = {'media': 'média'}
-        p_val = norm_map.get(priority_filter.lower(), priority_filter.lower())
+    try:
+        user_id = session.get('user_id')
+        ctx = get_analysis_context(user_id)
         
-        # DEBUG: Log what we are looking for
-        print(f"DEBUG_PRIORITY: Filtering for '{p_val}'", flush=True)
-        queries = [
-            q for q in queries 
-            if q.priority and str(q.priority).strip().lower() == p_val
-        ]
-
-    # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
-    def check_filter(text_val, filter_input, field_name="unknown"):
-        if not filter_input:
-            return True
-        # Converte o valor da célula para string minúscula
-        text_val = str(text_val).strip().lower() if text_val is not None else ""
+        if not ctx or not ctx['queries']:
+            return jsonify({'success': False, 'error': 'Execute uma análise primeiro'}), 400
         
-        # Opções marcadas (separadas por vírgula)
-        search_terms = [t.strip() for t in filter_input.split(',')]
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 50, type=int)
+        priority_filter = request.args.get('priority', None)
+        search_term = request.args.get('search', '').strip().lower()
         
-        # Exact Match
-        match = any(term == text_val for term in search_terms if term)
-        return match
-
-    if filter_record_id:
-        queries = [q for q in queries if check_filter(q.record_id, filter_record_id, 'record')]
-    if filter_event:
-        queries = [q for q in queries if check_filter(q.event, filter_event, 'event')]
-    if filter_field:
-        queries = [q for q in queries if check_filter(q.field, filter_field, 'field')]
-    if filter_value:
-        queries = [q for q in queries if check_filter(q.value_found, filter_value, 'value')]
-    if filter_issue_type:
-         queries = [q for q in queries if check_filter(q.issue_type, filter_issue_type, 'issue')]
-    if filter_priority:
-         queries = [q for q in queries if check_filter(q.priority, filter_priority, 'priority')]
-
-    import unicodedata
-    def remove_accents(input_str):
-        if not input_str: return ""
-        nfkd_form = unicodedata.normalize('NFKD', str(input_str))
-        return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
-
-    # 3. Busca Global Expandida (com remoção de acentos)
-    if search_term:
-        print(f"[DEBUG search] Searching for: '{search_term}' | Page Size: {page_size}", flush=True)
-        search_normalized = remove_accents(search_term)
+        # print(f"DEBUG_PAGINATION: Page={page}, Size={page_size}, Search='{search_term}'", flush=True)
+        # print(f"DEBUG_FULL_ARGS: {dict(request.args)}", flush=True)
         
-        def match_field(val):
-            return search_normalized in remove_accents(val)
+        queries = ctx['queries']
+        client = ctx['client']
+        field_labels = ctx.get('field_labels', {})
+        
+        # Captura filtros de coluna
+        filter_record_id = request.args.get('filter_record_id', '').strip().lower()
+        filter_event = request.args.get('filter_event_id', '').strip().lower()
+        filter_field = request.args.get('filter_field', '').strip().lower()
+        filter_value = request.args.get('filter_value', '').strip().lower()
+        filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
+        filter_priority = request.args.get('filter_priority', '').strip().lower()
 
-        queries_before = len(queries)
-        queries = [
-            q for q in queries 
-            if match_field(q.record_id) or 
-               match_field(q.event) or
-               match_field(q.field) or 
-               match_field(field_labels.get(q.field, "")) or
-               match_field(q.value_found) or
-               match_field(q.issue_type) or
-               match_field(q.explanation) or
-               match_field(q.priority) or
-               match_field(q.suggested_action)
-        ]
-        print(f"[DEBUG search] Results: {len(queries)} (was {queries_before})", flush=True)
-    
-    # Calcula paginação
-    total_queries = len(queries)
-    total_pages = (total_queries + page_size - 1) // page_size
-    start_idx = (page - 1) * page_size
-    end_idx = start_idx + page_size
-    
-    page_queries = queries[start_idx:end_idx]
-    queries_preview = _build_queries_page(page_queries, client, last_analysis.get('field_labels', {}))
-    
-    return jsonify({
-        'success': True,
-        'queries': queries_preview,
-        'page': page,
-        'page_size': page_size,
-        'total_queries': total_queries,
-        'total_pages': total_pages,
-        'debug_params': {
-             'received_value': request.args.get('filter_value', ''),
-             'received_field': request.args.get('filter_field', ''),
-             'active_columns': [k for k in request.args.keys() if k.startswith('filter_')]
-        }
-    })
+        # DEBUG LOGS
+        # print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'", flush=True)
+
+        
+        # 1. Filtra por prioridade (Botões Superiores)
+        if priority_filter and priority_filter.lower() in ['alta', 'média', 'baixa', 'media']:
+            # Mapa para normalizar
+            norm_map = {'media': 'média'}
+            p_val = norm_map.get(priority_filter.lower(), priority_filter.lower())
+            
+            # DEBUG: Log what we are looking for
+            # print(f"DEBUG_PRIORITY: Filtering for '{p_val}'", flush=True)
+            queries = [
+                q for q in queries 
+                if q.priority and str(q.priority).strip().lower() == p_val
+            ]
+
+        # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
+        def check_filter(text_val, filter_input, field_name="unknown"):
+            if not filter_input:
+                return True
+            # Converte o valor da célula para string minúscula
+            text_val = str(text_val).strip().lower() if text_val is not None else ""
+            
+            # Opções marcadas (separadas por vírgula)
+            search_terms = [t.strip() for t in filter_input.split(',')]
+            
+            # Exact Match
+            match = any(term == text_val for term in search_terms if term)
+            return match
+
+        if filter_record_id:
+            queries = [q for q in queries if check_filter(q.record_id, filter_record_id, 'record')]
+        if filter_event:
+            queries = [q for q in queries if check_filter(q.event, filter_event, 'event')]
+        if filter_field:
+            queries = [q for q in queries if check_filter(q.field, filter_field, 'field')]
+        if filter_value:
+            queries = [q for q in queries if check_filter(q.value_found, filter_value, 'value')]
+        if filter_issue_type:
+            queries = [q for q in queries if check_filter(q.issue_type, filter_issue_type, 'issue')]
+        if filter_priority:
+            queries = [q for q in queries if check_filter(q.priority, filter_priority, 'priority')]
+
+        import unicodedata
+        def remove_accents(input_str):
+            if not input_str: return ""
+            nfkd_form = unicodedata.normalize('NFKD', str(input_str))
+            return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
+
+        # 3. Busca Global Expandida (com remoção de acentos)
+        if search_term:
+            # print(f"[DEBUG search] Searching for: '{search_term}' | Page Size: {page_size}", flush=True)
+            search_normalized = remove_accents(search_term)
+            
+            def match_field(val):
+                return search_normalized in remove_accents(val)
+
+            queries_before = len(queries)
+            queries = [
+                q for q in queries 
+                if match_field(q.record_id) or 
+                match_field(q.event) or
+                match_field(q.field) or 
+                match_field(field_labels.get(q.field, "")) or
+                match_field(q.value_found) or
+                match_field(q.issue_type) or
+                match_field(q.explanation) or
+                match_field(q.priority) or
+                match_field(q.suggested_action)
+            ]
+            # print(f"[DEBUG search] Results: {len(queries)} (was {queries_before})", flush=True)
+        
+        # Calcula paginação
+        total_queries = len(queries)
+        total_pages = (total_queries + page_size - 1) // page_size
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        
+        page_queries = queries[start_idx:end_idx]
+        queries_preview = _build_queries_page(page_queries, client, ctx.get('field_labels', {}))
+        
+        return jsonify({
+            'success': True,
+            'queries': queries_preview,
+            'page': page,
+            'page_size': page_size,
+            'total_queries': total_queries,
+            'total_pages': total_pages,
+            'debug_params': {
+                'received_value': request.args.get('filter_value', ''),
+                'received_field': request.args.get('filter_field', ''),
+                'active_columns': [k for k in request.args.keys() if k.startswith('filter_')]
+            }
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Erro no servidor ao filtrar: {str(e)}'
+        }), 500
 
 
 @app.route('/api/filter-options', methods=['GET'])
