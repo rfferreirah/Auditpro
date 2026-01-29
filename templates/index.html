@@ -1432,6 +1432,8 @@
                 if (data.success && data.fields) {
                     projectFields = data.fields;
                     populateFieldDropdowns();
+                    // Also populate cross-event fields once we have data
+                    populateCrossEventFields();
 
                     // Extract unique forms from fields
                     const formsSet = new Set();
@@ -1439,13 +1441,10 @@
                         if (f.form_name) formsSet.add(f.form_name);
                     });
                     projectForms = Array.from(formsSet);
-                    populateFormDropdowns();
+                    // populateFormDropdowns(); // Only if this function exists and is needed
                 }
             } catch (error) {
                 console.error('Erro ao carregar opções:', error);
-                document.querySelectorAll('.popover-options').forEach(el => {
-                    el.innerHTML = '<div style="padding:5px; color:red;">Erro ao carregar options.</div>';
-                });
             }
         }
 
@@ -1455,18 +1454,21 @@
                 const response = await fetch('/api/events');
                 const data = await response.json();
 
-                if (data.success && data.options) {
-                    filterOptionsData = data.options;
-                    populateFormDropdowns();
+                if (data.success) {
+                    // Update global cache
+                    projectEvents = data.events || [];
+
+                    if (projectEvents.length > 0) {
+                        populateEventDropdowns();
+                    } else {
+                        // Optional: Disable cross-event inputs if not longitudinal
+                        console.log("Projeto não longitudinal ou sem eventos.");
+                    }
                 } else {
-                    console.warn('Filter options failed:', data);
-                    document.querySelectorAll('.popover-options').forEach(el => {
-                        el.innerHTML = '<div style="padding:5px; color:orange;">Sem dados (re-analise).</div>';
-                    });
+                    console.warn('Events API erro:', data);
                 }
             } catch (error) {
                 console.error('Erro ao carregar eventos:', error);
-                // Non-longitudinal projects won't have events, this is OK
             }
         }
 
