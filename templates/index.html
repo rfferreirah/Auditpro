@@ -1121,7 +1121,7 @@
                         COLUNAS ATIVAS: [${(p.active_columns || []).join(', ')}]
                     </div>`;
             }
-            const tableContainer = document.querySelector('.query-table-container');
+            const tableContainer = document.getElementById('queryTableBody').closest('.card');
             // Remove old debug footer if exists
             const oldFooter = document.getElementById('debug-footer-info');
             if (oldFooter) oldFooter.remove();
@@ -1442,7 +1442,10 @@
                     populateFormDropdowns();
                 }
             } catch (error) {
-                console.error('Erro ao carregar campos:', error);
+                console.error('Erro ao carregar opções:', error);
+                document.querySelectorAll('.popover-options').forEach(el => {
+                    el.innerHTML = '<div style="padding:5px; color:red;">Erro ao carregar options.</div>';
+                });
             }
         }
 

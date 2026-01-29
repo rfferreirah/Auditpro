@@ -494,7 +494,16 @@ def get_filter_options():
         events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
         fields = sorted(list(set(q.field for q in queries if q.field)))
         # Para valores, verificamos explicitamente se não é None para incluir 0
-        values = sorted(list(set(str(q.value_found) for q in queries if q.value_found is not None and str(q.value_found) != "")))
+        values = set()
+        for q in queries:
+            try:
+                if q.value_found is not None:
+                     v_str = str(q.value_found)
+                     if v_str != "":
+                         values.add(v_str)
+            except:
+                pass
+        values = sorted(list(values))
         
         fields_data = []
         for f in fields:
