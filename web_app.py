@@ -373,12 +373,13 @@ def get_queries_page():
     filter_field = request.args.get('filter_field', '').strip().lower()
     filter_value = request.args.get('filter_value', '').strip().lower()
     filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
+    filter_priority = request.args.get('filter_priority', '').strip().lower()
     
     queries = ctx['queries']
     client = ctx['client']
     field_labels = ctx.get('field_labels', {})
     
-    # 1. Filtra por prioridade
+    # 1. Filtra por prioridade (Botões Superiores)
     if priority_filter and priority_filter in ['Alta', 'Média', 'Baixa']:
         queries = [q for q in queries if q.priority == priority_filter]
 
@@ -408,6 +409,8 @@ def get_queries_page():
         queries = [q for q in queries if check_filter(q.value_found or '', filter_value)]
     if filter_issue_type:
          queries = [q for q in queries if check_filter(q.issue_type or '', filter_issue_type)]
+    if filter_priority:
+         queries = [q for q in queries if check_filter(q.priority or '', filter_priority)]
 
     import unicodedata
     def remove_accents(input_str):
