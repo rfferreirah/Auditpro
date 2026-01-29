@@ -80,14 +80,26 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const error = urlParams.get('error_description') || urlParams.get('error');
 
+                // DEBUG MODE: Show what we received instead of redirecting
+                const debugInfo = `
+                    <div style="text-align:left; margin-top:20px; font-family:monospace; background:#333; padding:10px; border-radius:5px;">
+                        <strong>Debug Info:</strong><br>
+                        URL: ${window.location.href}<br>
+                        Hash: ${hash || '(empty)'}<br>
+                        Search: ${window.location.search || '(empty)'}<br>
+                        Error: ${error || '(none)'}
+                    </div>
+                    <p>Por favor, envie um print desta tela se o login travou aqui.</p>
+                    <a href="/login" class="btn" style="color: #3b82f6; margin-top: 10px; display:inline-block;">Voltar para Login</a>
+                `;
+
                 if (error) {
-                    document.getElementById('status').innerText = 'Erro no login: ' + error;
-                    setTimeout(() => window.location.href = '/login', 3000);
+                    document.getElementById('status').innerHTML = 'Erro no login: ' + error + debugInfo;
                 } else {
-                    // Maybe we are already logged in or visited directly?
-                    // Redirect to index just in case
-                    window.location.href = '/login';
+                    document.getElementById('status').innerHTML = 'Não foi possível encontrar o token de acesso.' + debugInfo;
                 }
+                // Removed automatic redirect for debugging
+                // setTimeout(() => window.location.href = '/login', 3000);
             }
         }
 
