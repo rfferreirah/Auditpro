@@ -1103,16 +1103,37 @@
             // Inicializa paginação
             currentPage = data.page || 1;
             totalPages = data.total_pages || 1;
-            currentFilter = null;
+            // currentFilter = null; // Do NOT reset filter here, preserves state
             updatePaginationUI();
 
             // Query table
             updateQueryTable(data.queries);
 
-            // Fetch filter options for popovers
-            fetchFilterOptions();
+            // DEBUG FOOTER
+            let debugHtml = '';
+            if (data.debug_params) {
+                const p = data.debug_params;
+                debugHtml = `
+                    <div style="font-size: 0.75rem; color: #666; margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
+                        <strong>Debug Info:</strong> 
+                        Recebido Campo='${p.received_field || ''}' 
+                        Valor='${p.received_value || ''}'
+                        Prioridade='${p.received_priority || ''}'
+                        Total Filtrado=${p.filter_count_after_value}
+                        Ativos=[${(p.active_columns || []).join(', ')}]
+                    </div>`;
+            }
+            const tableContainer = document.querySelector('.query-table-container');
+            // Remove old debug footer if exists
+            const oldFooter = document.getElementById('debug-footer-info');
+            if (oldFooter) oldFooter.remove();
 
-            // Scroll to results
+            if (debugHtml) {
+                const footer = document.createElement('div');
+                footer.id = 'debug-footer-info';
+                footer.innerHTML = debugHtml;
+                if (tableContainer) tableContainer.after(footer);
+            }
             resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
 

@@ -384,8 +384,13 @@ def get_queries_page():
     field_labels = ctx.get('field_labels', {})
     
     # 1. Filtra por prioridade (Botões Superiores)
-    if priority_filter and priority_filter in ['Alta', 'Média', 'Baixa']:
-        queries = [q for q in queries if q.priority == priority_filter]
+    # 1. Filtra por prioridade (Botões Superiores)
+    if priority_filter and priority_filter.lower() in ['alta', 'média', 'baixa', 'media']:
+        # Mapa para normalizar
+        norm_map = {'media': 'média'}
+        p_val = norm_map.get(priority_filter.lower(), priority_filter.lower())
+        
+        queries = [q for q in queries if q.priority and q.priority.lower() == p_val]
 
     # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
     def check_filter(text_val, filter_input, field_name="unknown"):
