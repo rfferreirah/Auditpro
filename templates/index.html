@@ -1221,10 +1221,12 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // DEBUG: Show what backend received
-                    if (data.debug_params && data.debug_params.received_value) {
-                        alert(`DEBUG: Enviado para backend:\nValor: ${data.debug_params.received_value}\nTotal filtrado: ${data.debug_params.filter_count_after_value}`);
-                        console.log("DEBUG PARAMS:", data.debug_params);
+                    // DEBUG: Show what backend received - ALWAYS
+                    if (data.debug_params) {
+                        try {
+                            // Try to update footer directly or log
+                            console.log("DEBUG PARAMS RECEIVED:", data.debug_params);
+                        } catch (e) { console.error(e); }
                     }
 
                     currentPage = data.page;
