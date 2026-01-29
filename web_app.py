@@ -479,6 +479,7 @@ def get_filter_options():
     ctx = get_analysis_context(user_id)
     
     print(f"DEBUG: get_filter_options called for user {user_id}", flush=True)
+    # RE-DEPLOY TRIGGER
     if not ctx or not ctx['queries']:
         print("DEBUG: No context or queries found for options", flush=True)
         return jsonify({'success': False, 'options': {}})
