@@ -109,8 +109,6 @@ class RulesManager:
              
         data = db.get_custom_rules(user_id, token)
         
-        data = db.get_custom_rules(user_id, token)
-        
         # Garante que todas as regras de sistema existam
         self._ensure_system_rules(user_id, token, data)
         

@@ -1976,9 +1976,20 @@
                     populateFilterOptions('event_id', data.options.event_id);
                     populateFilterOptions('field', data.options.field);
                     populateFilterOptions('value', data.options.value);
+                } else {
+                    // Update all popovers to show "Without data"
+                    ['record_id', 'event_id', 'field', 'value'].forEach(col => {
+                        const container = document.querySelector(`.popover-options[data-col="${col}"]`);
+                        if (container) {
+                            container.innerHTML = '<span style="font-size:0.8rem; color: var(--text-secondary); padding: 5px;">Sem dados (Execute análise)</span>';
+                        }
+                    });
                 }
             } catch (error) {
                 console.error('Erro ao carregar opções de filtro:', error);
+                document.querySelectorAll('.popover-options').forEach(el => {
+                    el.innerHTML = '<span style="font-size:0.8rem; color: var(--danger); padding: 5px;">Erro ao carregar</span>';
+                });
             }
         }
 
@@ -1989,7 +2000,7 @@
             container.innerHTML = '';
 
             if (!options || options.length === 0) {
-                container.innerHTML = '<span style="font-size:0.8rem; color: var(--text-secondary);">Sem opções</span>';
+                container.innerHTML = '<span style="font-size:0.8rem; color: var(--text-secondary); padding: 5px;">Sem dados</span>';
                 return;
             }
 
