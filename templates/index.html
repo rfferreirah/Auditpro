@@ -1243,6 +1243,7 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar página:', error);
+                showStatus('Erro ao carregar dados: ' + error.message, 'error');
             } finally {
                 // Hide search spinner
                 document.getElementById('searchSpinner').style.display = 'none';
@@ -2005,6 +2006,10 @@
             const container = document.querySelector(`.popover-options[data-col="${colName}"]`);
             if (!container) return;
 
+            // Get current active filters for this column to persist selection
+            const hiddenInput = document.querySelector(`.filter-input[data-col="${colName}"]`);
+            const currentValues = hiddenInput ? hiddenInput.value.split(',') : [];
+
             container.innerHTML = '';
 
             if (!options || options.length === 0) {
@@ -2032,6 +2037,11 @@
                 checkbox.type = 'checkbox';
                 checkbox.value = value;
                 checkbox.style.margin = '0'; // Reset margin
+
+                // RESTORE STATE: Check if this value is in current filters
+                if (currentValues.includes(value.toString())) {
+                    checkbox.checked = true;
+                }
 
                 // FORCE BINDING
                 checkbox.addEventListener('change', function (e) {
