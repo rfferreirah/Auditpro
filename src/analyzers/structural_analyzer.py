@@ -31,7 +31,11 @@ class StructuralAnalyzer(BaseAnalyzer):
         super().__init__(project_data)
         # Default: if None, enable ALL (to be safe), but QueryGenerator will pass specific list
         self.enabled_checks = enabled_checks if enabled_checks is not None else [
-            'sys_required', 'sys_range', 'sys_format', 'sys_choices', 'sys_branching'
+            '00000000-0000-0000-0000-000000000002', # sys_required
+            '00000000-0000-0000-0000-000000000006', # sys_range
+            '00000000-0000-0000-0000-000000000005', # sys_format
+            '00000000-0000-0000-0000-000000000007', # sys_choices
+            '00000000-0000-0000-0000-000000000001'  # sys_branching
         ]
     
     def analyze(self) -> list[Query]:
@@ -65,27 +69,27 @@ class StructuralAnalyzer(BaseAnalyzer):
                 
                 # Validações
                 # Validações baseadas em configuração
-                if 'sys_required' in self.enabled_checks:
+                if '00000000-0000-0000-0000-000000000002' in self.enabled_checks: # sys_required
                     self._check_required_field(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if 'sys_range' in self.enabled_checks:
+                if '00000000-0000-0000-0000-000000000006' in self.enabled_checks: # sys_range
                     self._check_value_range(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if 'sys_format' in self.enabled_checks:
+                if '00000000-0000-0000-0000-000000000005' in self.enabled_checks: # sys_format
                     self._check_format(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if 'sys_choices' in self.enabled_checks:
+                if '00000000-0000-0000-0000-000000000007' in self.enabled_checks: # sys_choices
                     self._check_choices(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if 'sys_branching' in self.enabled_checks:
+                if '00000000-0000-0000-0000-000000000001' in self.enabled_checks: # sys_branching
                     self._check_branching_logic_violation(
                         record_id, event, field_meta, value, should_exist
                     )

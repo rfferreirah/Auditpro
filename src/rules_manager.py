@@ -152,34 +152,7 @@ class RulesManager:
         
         system_rules_definitions = [
             # Estruturais
-            {
-                "id": "sys_branching",
-                "name": "Violações de Branching Logic",
-                "message": "Campo preenchido indevidamente (oculto pela lógica condicional)",
-                "rule_type": "system",
-                "field": "branching_logic", "operator": "check", "value": "Active", "priority": "Baixa", "enabled": True
-            },
-            {
-                "id": "sys_required", 
-                "name": "Campos Obrigatórios Vazios",
-                "message": "Campo marcado como obrigatório está vazio",
-                "rule_type": "system",
-                "field": "required_fields", "operator": "check", "value": "Active", "priority": "Alta", "enabled": True
-            },
-            {
-                "id": "sys_format",
-                "name": "Formatos Inválidos",
-                "message": "Valor não corresponde ao formato do campo (data, email, etc)",
-                "rule_type": "system",
-                "field": "format_check", "operator": "check", "value": "Active", "priority": "Média", "enabled": False
-            },
-            {
-                "id": "sys_range",
-                "name": "Valores Fora do Limite (Range)",
-                "message": "Valor numérico fora dos limites min/max definidos",
-                "rule_type": "system",
-                "field": "range_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": False
-            },
+            # Estruturais (Legacy removed)
             {
                 "id": "00000000-0000-0000-0000-000000000001",
                 "name": "Branching Logic (Campos Ocultos)",
@@ -193,6 +166,27 @@ class RulesManager:
                 "message": "Campo obrigatório está vazio",
                 "rule_type": "system",
                 "field": "missing_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": True
+            },
+            {
+                "id": "00000000-0000-0000-0000-000000000005",
+                "name": "Formatos Inválidos",
+                "message": "Valor não corresponde ao formato do campo (data, email, etc)",
+                "rule_type": "system",
+                "field": "format_check", "operator": "check", "value": "Active", "priority": "Média", "enabled": True
+            },
+            {
+                "id": "00000000-0000-0000-0000-000000000006",
+                "name": "Valores Fora do Limite (Range)",
+                "message": "Valor numérico fora dos limites min/max definidos",
+                "rule_type": "system",
+                "field": "range_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": False
+            },
+            {
+                "id": "00000000-0000-0000-0000-000000000007",
+                "name": "Opções Inválidas (Choices)",
+                "message": "Valor selecionado não existe na lista de opções",
+                "rule_type": "system",
+                "field": "choice_check", "operator": "check", "value": "Active", "priority": "Média", "enabled": False
             },
             {
                 "id": "00000000-0000-0000-0000-000000000003",
