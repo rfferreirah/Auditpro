@@ -55,6 +55,7 @@ class AuthManager:
                 meta = response.user.user_metadata or {}
                 session['user_name'] = meta.get('full_name') or response.user.email.split('@')[0]
                 session['access_token'] = response.session.access_token
+                session['refresh_token'] = response.session.refresh_token
                 return {"success": True, "user": response.user}
                 
             return {"success": False, "error": "Invalid credentials"}
