@@ -1631,7 +1631,11 @@
             if (rule) {
                 document.getElementById('ruleId').value = rule.id;
                 document.getElementById('ruleName').value = rule.name;
+
+                // Set Type and Update UI Layout First
                 document.getElementById('ruleType').value = rule.rule_type;
+                ruleType.dispatchEvent(new Event('change'));
+
                 document.getElementById('rulePriority').value = rule.priority;
                 document.getElementById('ruleField').value = rule.field;
                 document.getElementById('ruleOperator').value = rule.operator;
@@ -1644,8 +1648,7 @@
                 if (rule.rule_type === 'range' && typeof rule.value === 'object') {
                     document.getElementById('ruleMin').value = rule.value.min || '';
                     document.getElementById('ruleMax').value = rule.value.max || '';
-                    document.getElementById('rangeGroup').style.display = 'block';
-                    document.getElementById('ruleValueGroup').style.display = 'none';
+                    // These are handled by ruleType change, but we ensure values are set
                 } else {
                     document.getElementById('ruleValue').value = rule.value || '';
                 }
@@ -1656,7 +1659,7 @@
 
                 // Populate cross-event fields
                 if (rule.rule_type === 'cross_event') {
-                    document.getElementById('crossEventGroup').style.display = 'block';
+                    // document.getElementById('crossEventGroup').style.display = 'block'; // Handled by change event
                     populateCrossEventFields(); // Ensure populated
 
                     document.getElementById('ruleEvent1').value = rule.event1 || '';
@@ -1670,9 +1673,6 @@
                         if (rule.value) document.getElementById('crossField2').value = rule.value;
                     }, 100);
                 }
-
-                // Trigger change to update UI
-                ruleType.dispatchEvent(new Event('change'));
             }
         }
 
