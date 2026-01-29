@@ -379,25 +379,26 @@ def get_queries_page():
     # DEBUG LOGS
     print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'", flush=True)
 
-    queries = ctx['queries']
-    client = ctx['client']
-    field_labels = ctx.get('field_labels', {})
     
-    # 1. Filtra por prioridade (Botões Superiores)
     # 1. Filtra por prioridade (Botões Superiores)
     if priority_filter and priority_filter.lower() in ['alta', 'média', 'baixa', 'media']:
         # Mapa para normalizar
         norm_map = {'media': 'média'}
         p_val = norm_map.get(priority_filter.lower(), priority_filter.lower())
         
-        queries = [q for q in queries if q.priority and q.priority.lower() == p_val]
+        # DEBUG: Log what we are looking for
+        print(f"DEBUG_PRIORITY: Filtering for '{p_val}'", flush=True)
+        queries = [
+            q for q in queries 
+            if q.priority and str(q.priority).strip().lower() == p_val
+        ]
 
     # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
     def check_filter(text_val, filter_input, field_name="unknown"):
         if not filter_input:
             return True
         # Converte o valor da célula para string minúscula
-        text_val = str(text_val).lower() if text_val is not None else ""
+        text_val = str(text_val).strip().lower() if text_val is not None else ""
         
         # Opções marcadas (separadas por vírgula)
         search_terms = [t.strip() for t in filter_input.split(',')]
