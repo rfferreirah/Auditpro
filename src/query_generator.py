@@ -80,11 +80,19 @@ class QueryGenerator:
              # Se recebemos checks explícitos do frontend, usamos eles
              enabled_structural_checks = [c for c in self.active_checks if c.startswith('sys_')]
         else:
-             # Fallback para rules_manager
+             # Fallback para rules_manager (DB persistence)
+             # Known system UUIDs for structural checks
+             system_uuids = {
+                '00000000-0000-0000-0000-000000000001', # sys_branching
+                '00000000-0000-0000-0000-000000000002', # sys_required
+                '00000000-0000-0000-0000-000000000005', # sys_format
+                '00000000-0000-0000-0000-000000000006', # sys_range
+                '00000000-0000-0000-0000-000000000007', # sys_choices
+             }
+             
              enabled_structural_checks = [
                 rid for rid in active_ids 
-                if rid.startswith('sys_') 
-                and rid not in ['sys_temporal', 'sys_clinical', 'sys_operational'] # Separate structural ones
+                if rid.startswith('sys_') or rid in system_uuids
             ]
         
         # Analisador Estrutural

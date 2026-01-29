@@ -68,33 +68,39 @@ class StructuralAnalyzer(BaseAnalyzer):
                 )
                 
                 # Validações
-                # Validações baseadas em configuração
-                if '00000000-0000-0000-0000-000000000002' in self.enabled_checks: # sys_required
+                # Validações baseadas em configuração (Suporta chaves legíveis e UUIDs)
+                if self.is_check_enabled('sys_required', '00000000-0000-0000-0000-000000000002'):
                     self._check_required_field(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if '00000000-0000-0000-0000-000000000006' in self.enabled_checks: # sys_range
+                if self.is_check_enabled('sys_range', '00000000-0000-0000-0000-000000000006'):
                     self._check_value_range(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if '00000000-0000-0000-0000-000000000005' in self.enabled_checks: # sys_format
+                if self.is_check_enabled('sys_format', '00000000-0000-0000-0000-000000000005'):
                     self._check_format(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if '00000000-0000-0000-0000-000000000007' in self.enabled_checks: # sys_choices
+                if self.is_check_enabled('sys_choices', '00000000-0000-0000-0000-000000000007'):
                     self._check_choices(
                         record_id, event, field_meta, value, should_exist
                     )
                 
-                if '00000000-0000-0000-0000-000000000001' in self.enabled_checks: # sys_branching
+                if self.is_check_enabled('sys_branching', '00000000-0000-0000-0000-000000000001'):
                     self._check_branching_logic_violation(
                         record_id, event, field_meta, value, should_exist
                     )
         
         return self.queries
+
+    def is_check_enabled(self, key: str, uuid: str) -> bool:
+        """Verifica se uma checagem está habilitada (por chave ou UUID)."""
+        if not self.enabled_checks:
+            return False
+        return key in self.enabled_checks or uuid in self.enabled_checks
     
     def _check_required_field(
         self,
