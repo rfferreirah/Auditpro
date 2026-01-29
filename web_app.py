@@ -464,6 +464,11 @@ def get_queries_page():
         'page_size': page_size,
         'total_queries': total_queries,
         'total_pages': total_pages,
+        'debug_params': {
+             'received_value': request.args.get('filter_value', ''),
+             'received_field': request.args.get('filter_field', ''),
+             'active_columns': [k for k in request.args.keys() if k.startswith('filter_')]
+        }
     })
 
 
