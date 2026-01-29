@@ -1,4 +1,3 @@
-
 import os
 import functools
 from flask import session, redirect, url_for, flash
