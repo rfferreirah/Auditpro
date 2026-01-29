@@ -207,11 +207,33 @@ class AuthManager:
                 }
                 
             return {"success": False, "error": "Invalid token"}
+    
+    def refresh_session(self, refresh_token):
+        """Refresh session using refresh token"""
+        if not self.client:
+            return {"success": False, "error": "Supabase authentication not configured"}
+            
+        try:
+            res = self.client.auth.refresh_session(refresh_token)
+            
+            if res.user and res.session:
+                session['user_id'] = res.user.id
+                session['user_email'] = res.user.email
+                session['access_token'] = res.session.access_token
+                session['refresh_token'] = res.session.refresh_token
+                return {
+                    "success": True, 
+                    "access_token": res.session.access_token,
+                    "refresh_token": res.session.refresh_token
+                }
+                
+            return {"success": False, "error": "Invalid refresh response"}
         except Exception as e:
+            print(f"Error refreshing session: {e}")
             return {"success": False, "error": str(e)}
 
-# Singleton instance
-auth_manager = AuthManager()
+    # Singleton instance
+    auth_manager = AuthManager()
 
 def login_required(f):
     """Decorator to protect routes"""
