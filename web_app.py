@@ -936,37 +936,46 @@ def create_rule():
     except Exception as e:
         # Retry logic for JWT Expiration
         error_msg = str(e)
+        print(f"DEBUG_JWT_CATCH: Error caught: {error_msg}")
+        
+        # Check for JWT expiration signatures
         if "JWT expired" in error_msg or "PGRST303" in error_msg:
-            print(f"DEBUG: JWT expired in create_rule. Attempting refresh...")
+            print(f"DEBUG_JWT: JWT expired detected in create_rule.")
+            
             refresh_token = session.get('refresh_token')
+            print(f"DEBUG_JWT: Refresh token available? {'YES' if refresh_token else 'NO'}")
+            
             if refresh_token:
+                print("DEBUG_JWT: Attempting to refresh session...")
                 refresh_res = auth_manager.refresh_session(refresh_token)
+                print(f"DEBUG_JWT: Refresh success? {refresh_res.get('success')}")
+                
                 if refresh_res.get('success'):
-                    print("DEBUG: Token refreshed successfully. Retrying action.")
+                    print("DEBUG_JWT: Token refreshed. Retrying 'add_rule'...")
                     new_token = refresh_res['access_token']
                     try:
                         # Retry with new token
                         rule = rules_manager.add_rule(data, user_id, new_token)
                         
-                        if not rule:
-                             return jsonify({'success': False, 'error': 'Erro ao salvar regra após refresh.'}), 500
-                        
-                        db.log_audit_event(user_id, 'create_rule', 'custom_rules', rule.id, data)
-                        return jsonify({
-                            'success': True,
-                            'rule': rule.to_dict(),
-                            'message': 'Regra criada com sucesso'
-                        })
+                        if rule:
+                             db.log_audit_event(user_id, 'create_rule', 'custom_rules', rule.id, rule.to_dict())
+                             return jsonify({
+                                'success': True,
+                                'rule': rule.to_dict(),
+                                'message': 'Regra criada com sucesso (sessão restaurada)'
+                             })
                     except Exception as retry_e:
-                        print(f"DEBUG: Retry failed: {retry_e}")
-                        return jsonify({'success': False, 'error': str(retry_e)}), 500
-                else:
-                    print("DEBUG: Refresh failed.")
+                        print(f"DEBUG_JWT: Retry failed with error: {retry_e}")
+                        return jsonify({'success': False, 'error': f"Erro ao retentar: {str(retry_e)}"}), 500
             else:
-                 print("DEBUG: No refresh token available.")
-
+                 print("DEBUG_JWT: No refresh token found in session. User must login again.")
+                 return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
+                 
         print(f"Erro ao criar regra: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
 
 
 @app.route('/api/rules/<rule_id>', methods=['GET'])
