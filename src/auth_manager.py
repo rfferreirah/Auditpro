@@ -57,7 +57,7 @@ class AuthManager:
                 session['access_token'] = response.session.access_token
                 session['refresh_token'] = response.session.refresh_token
                 return {"success": True, "user": response.user}
-                
+                 
             return {"success": False, "error": "Invalid credentials"}
             
         except Exception as e:
