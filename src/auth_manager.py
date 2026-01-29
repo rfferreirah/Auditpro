@@ -163,7 +163,14 @@ class AuthManager:
                 session['access_token'] = res.session.access_token if res.session else None
                 session['refresh_token'] = res.session.refresh_token if res.session else None
                 
-                return {"success": True, "user": res.user}
+                return {
+                    "success": True, 
+                    "user": {
+                        "id": res.user.id,
+                        "email": res.user.email,
+                        "user_metadata": res.user.user_metadata
+                    }
+                }
                 
             return {"success": False, "error": "Invalid code exchange response"}
         except Exception as e:
@@ -190,7 +197,14 @@ class AuthManager:
                 if refresh_token:
                     session['refresh_token'] = refresh_token
                     
-                return {"success": True, "user": user_response.user}
+                return {
+                    "success": True, 
+                    "user": {
+                        "id": user_response.user.id,
+                        "email": user_response.user.email,
+                        "user_metadata": user_response.user.user_metadata
+                    }
+                }
                 
             return {"success": False, "error": "Invalid token"}
         except Exception as e:
