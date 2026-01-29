@@ -124,9 +124,14 @@ def auth_set_session():
     data = request.get_json()
     access_token = data.get('access_token')
     refresh_token = data.get('refresh_token')
+    code = data.get('code')
+    
+    if code:
+        # Auth Code Flow (PKCE/Server-side)
+        return auth_manager.exchange_code(code)
     
     if not access_token:
-        return {"success": False, "error": "Token ausente"}, 400
+        return {"success": False, "error": "Token ou Código ausente"}, 400
         
     result = auth_manager.set_session(access_token, refresh_token)
     return result

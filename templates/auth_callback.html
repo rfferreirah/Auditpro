@@ -44,62 +44,75 @@
         // #access_token=...&refresh_token=...&expires_in=...&token_type=bearer&type=recovery
 
         function processHash() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
+            // Priority: Check for 'code' query param (Supabase Auth Code Flow / PKCE)
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error_description') || urlParams.get('error');
 
-            if (accessToken) {
-                document.getElementById('status').innerText = 'Autenticado! Redirecionando...';
+            if (code) {
+                document.getElementById('status').innerText = 'Código recebido. Trocando por sessão...';
 
-                // Send token to backend to set session cookie
+                // Exchange code for session
                 fetch('/auth/set_session', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        access_token: accessToken,
-                        refresh_token: refreshToken
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
                 })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             window.location.href = '/';
                         } else {
-                            document.getElementById('status').innerText = 'Erro ao criar sessão: ' + data.error;
+                            document.getElementById('status').innerText = 'Erro na troca de código: ' + data.error;
                         }
                     })
                     .catch(error => {
                         document.getElementById('status').innerText = 'Erro de conexão: ' + error;
                     });
+                return;
+            }
 
-            } else {
-                // Check if we have an error parameter in the URL (e.g., query string)
-                const urlParams = new URLSearchParams(window.location.search);
-                const error = urlParams.get('error_description') || urlParams.get('error');
+            // Fallback: Check for Hash (Implicit Flow - unusual for server-side redirect but possible)
+            const hash = window.location.hash.substring(1);
+            if (hash.includes('access_token')) {
+                const params = new URLSearchParams(hash);
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
 
-                // DEBUG MODE: Show what we received instead of redirecting
-                const debugInfo = `
-                    <div style="text-align:left; margin-top:20px; font-family:monospace; background:#333; padding:10px; border-radius:5px;">
-                        <strong>Debug Info:</strong><br>
-                        URL: ${window.location.href}<br>
-                        Hash: ${hash || '(empty)'}<br>
-                        Search: ${window.location.search || '(empty)'}<br>
-                        Error: ${error || '(none)'}
-                    </div>
-                    <p>Por favor, envie um print desta tela se o login travou aqui.</p>
-                    <a href="/login" class="btn" style="color: #3b82f6; margin-top: 10px; display:inline-block;">Voltar para Login</a>
-                `;
+                if (accessToken) {
+                    document.getElementById('status').innerText = 'Token recebido via Hash. Criando sessão...';
 
-                if (error) {
-                    document.getElementById('status').innerHTML = 'Erro no login: ' + error + debugInfo;
-                } else {
-                    document.getElementById('status').innerHTML = 'Não foi possível encontrar o token de acesso.' + debugInfo;
+                    fetch('/auth/set_session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.location.href = '/';
+                            } else {
+                                document.getElementById('status').innerText = 'Erro ao criar sessão: ' + data.error;
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById('status').innerText = 'Erro de conexão: ' + error;
+                        });
+                    return;
                 }
-                // Removed automatic redirect for debugging
-                // setTimeout(() => window.location.href = '/login', 3000);
+            }
+
+            // Error Handling
+            if (error) {
+                document.getElementById('status').innerHTML = 'Erro no login: ' + error +
+                    '<br><a href="/login" class="btn" style="color: #3b82f6; margin-top: 10px; display:inline-block;">Voltar para Login</a>';
+            } else {
+                // Determine if we should redirect or show error
+                document.getElementById('status').innerHTML = 'Token ou Código não encontrado.' +
+                    '<br><a href="/login" class="btn" style="color: #3b82f6; margin-top: 10px; display:inline-block;">Voltar para Login</a>';
             }
         }
 

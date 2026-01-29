@@ -147,6 +147,29 @@ class AuthManager:
                 error_msg = "Muitas tentativas. Aguarde um momento e tente novamente."
             return {"success": False, "error": error_msg}
 
+    def exchange_code(self, code):
+        """Exchange authorization code for session (PKCE/Auth Code Flow)"""
+        if not self.client:
+            return {"success": False, "error": "Supabase authentication not configured"}
+            
+        try:
+            res = self.client.auth.exchange_code_for_session({"auth_code": code})
+            
+            if res.user:
+                session['user_id'] = res.user.id
+                session['user_email'] = res.user.email
+                meta = res.user.user_metadata or {}
+                session['user_name'] = meta.get('full_name') or res.user.email.split('@')[0]
+                session['access_token'] = res.session.access_token if res.session else None
+                session['refresh_token'] = res.session.refresh_token if res.session else None
+                
+                return {"success": True, "user": res.user}
+                
+            return {"success": False, "error": "Invalid code exchange response"}
+        except Exception as e:
+            print(f"Error exchanging code: {e}")
+            return {"success": False, "error": str(e)}
+
     def set_session(self, access_token, refresh_token=None):
         """Set session from access token (OAuth flow)"""
         if not self.client:
