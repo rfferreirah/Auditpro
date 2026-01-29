@@ -374,7 +374,10 @@ def get_queries_page():
     filter_value = request.args.get('filter_value', '').strip().lower()
     filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
     filter_priority = request.args.get('filter_priority', '').strip().lower()
-    
+
+    # DEBUG LOGS
+    print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Priority='{filter_priority}', Field='{filter_field}'", flush=True)
+
     queries = ctx['queries']
     client = ctx['client']
     field_labels = ctx.get('field_labels', {})
@@ -383,34 +386,34 @@ def get_queries_page():
     if priority_filter and priority_filter in ['Alta', 'Média', 'Baixa']:
         queries = [q for q in queries if q.priority == priority_filter]
 
-    # 2. Filtros de Coluna (Excel-like) - Lógica AND entre colunas, OR dentro da coluna (separado por vírgula)
+    # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
     def check_filter(text_val, filter_input):
         if not filter_input:
             return True
-        text_val = str(text_val).lower()
+        # Converte o valor da célula para string minúscula
+        text_val = str(text_val).lower() if text_val is not None else ""
+        
+        # Opções marcadas (separadas por vírgula)
         search_terms = [t.strip() for t in filter_input.split(',')]
-        # DEBUG LOG
-        # res = any(term in text_val for term in search_terms if term)
-        # if filter_input and 'missing' in filter_input:  # Reduce noise, only log relevant
-        #     print(f"DEBUG_FILTER: Check '{text_val}' vs {search_terms} -> {res}", flush=True)
-        return any(term in text_val for term in search_terms if term)
+        
+        # Exact Match: se o valor da célula for IGUAL a qualquer um dos termos selecionados
+        return any(term == text_val for term in search_terms if term)
 
     if filter_record_id:
         queries = [q for q in queries if check_filter(q.record_id, filter_record_id)]
     if filter_event:
-        queries = [q for q in queries if check_filter(q.event or '', filter_event)]
+        queries = [q for q in queries if check_filter(q.event, filter_event)]
     if filter_field:
-        queries = [
-            q for q in queries 
-            if check_filter(q.field, filter_field) or 
-               check_filter(field_labels.get(q.field, ""), filter_field)
-        ]
+        # Para campo, verificamos tanto o nome técnico quanto o label
+        # (Neste caso, mantemos partial match apenas para label se desejar, mas checkboxes usam keys exatas)
+        # Vamos assumir Exact Match para o 'field' (nome técnico) que é o value do checkbox
+        queries = [q for q in queries if check_filter(q.field, filter_field)]
     if filter_value:
-        queries = [q for q in queries if check_filter(q.value_found or '', filter_value)]
+        queries = [q for q in queries if check_filter(q.value_found, filter_value)]
     if filter_issue_type:
-         queries = [q for q in queries if check_filter(q.issue_type or '', filter_issue_type)]
+         queries = [q for q in queries if check_filter(q.issue_type, filter_issue_type)]
     if filter_priority:
-         queries = [q for q in queries if check_filter(q.priority or '', filter_priority)]
+         queries = [q for q in queries if check_filter(q.priority, filter_priority)]
 
     import unicodedata
     def remove_accents(input_str):
@@ -474,8 +477,8 @@ def get_filter_options():
     record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))
     events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
     fields = sorted(list(set(q.field for q in queries if q.field)))
-    # Para valores, limitamos a 1000 para performance se necessário, mas o usuário quer todos
-    values = sorted(list(set(str(q.value_found) for q in queries if q.value_found)))
+    # Para valores, verificamos explicitamente se não é None para incluir 0
+    values = sorted(list(set(str(q.value_found) for q in queries if q.value_found is not None and str(q.value_found) != "")))
     
     # Para campos, podemos mandar também o label se quiser, mas por simplicidade mandamos só o nome
     # O frontend pode usar o mapping se já tiver, ou mandamos aqui:
