@@ -1478,8 +1478,11 @@
             const event2 = document.getElementById('ruleEvent2');
 
             const defaultOption = '<option value="">Selecione o evento...</option>';
+            // Option for All Events consistency check (only relevant for Event 2)
+            const allEventsOption = '<option value="_ALL_EVENTS_" style="font-weight: bold; color: var(--primary);">🔄 TODOS OS EVENTOS (Verificar Consistência)</option>';
+
             event1.innerHTML = defaultOption;
-            event2.innerHTML = defaultOption;
+            event2.innerHTML = defaultOption + allEventsOption;
 
             projectEvents.forEach(evt => {
                 const label = evt.event_name || evt.unique_event_name || evt;

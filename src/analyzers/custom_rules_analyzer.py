@@ -273,14 +273,70 @@ class CustomRulesAnalyzer(BaseAnalyzer):
         - field: campo no evento 1
         - field2: campo no evento 2
         - event1: nome do evento 1 (origem)
-        - event2: nome do evento 2 (destino)
+        - event2: nome do evento 2 (destino) OU '_ALL_EVENTS_' para consistência
         - operator: operador de comparação
         
         Retorna True se a regra for VIOLADA.
         """
-        # Verifica se a configuração está completa
-        if not rule.field2 or not rule.event2:
+        # Verifica se a configuração está completa (exceto para _ALL_EVENTS_)
+        if (not rule.field2 or not rule.event2) and rule.event2 != '_ALL_EVENTS_':
             return False
+        
+        actual_field = target_field if target_field else rule.field
+        
+        # === MODO CONSISTÊNCIA GLOBAL (Todos os eventos) ===
+        if rule.event2 == '_ALL_EVENTS_':
+             # Neste modo, verificamos se o valor do campo atual é consistente com TODOS os outros eventos
+             # Mas para evitar alertas duplicados (1 por evento), verificamos APENAS se:
+             # O valor deste registro difere de QUALQUER outro valor encontrado para o mesmo campo e record_id
+             
+             current_value = record.get(actual_field)
+             if self.is_empty(current_value):
+                 return False
+                 
+             # Busca todos os valores para este campo neste record_id em todos os eventos
+             all_values = set()
+             
+             # Itera sobre o índice para encontrar registros deste paciente
+             # Otimização: se tivermos acesso direto aos registros do paciente seria melhor
+             # Por agora: varre o índice (que é (record_id, event))
+             
+             # Nota: self.records_index tem chaves (record_id, event)
+             # Vamos encontrar todos keys que começam com record_id
+             found_values = []
+             
+             # Melhor estratégia: iterar project_data.records filtrando por record_id
+             # Isso pode ser lento se tiver muitos registros. 
+             # TODO: Criar índice record_id -> list[records] no __init__ se desempenho for ruim
+             
+             # Vamos varrer apenas os que tem o mesmo record_id
+             for rec in self.project_data.records:
+                 rid = rec.get(self.get_record_id_field())
+                 if str(rid) == str(record_id):
+                     val = rec.get(actual_field)
+                     if not self.is_empty(val):
+                         found_values.append(val)
+             
+             # Se tiver menos de 2 valores preenchidos no total, não tem como ter inconsistência
+             if len(found_values) < 2:
+                 return False
+                 
+             # Verifica consistência
+             # Se operador for "=", todos devem ser iguais
+             if rule.operator == "=":
+                 first_val = found_values[0]
+                 is_consistent = all(v == first_val for v in found_values)
+                 
+                 if not is_consistent:
+                     # Atualiza mensagem para ser mais informativo
+                     if not rule.message:
+                         rule.message = f"Inconsistência encontrada. Valores variam entre visitas: {list(set(found_values))}"
+                     return True # VIOLAÇÃO
+                     
+             return False
+
+
+        # === MODO COMPARAÇÃO PAR-A-PAR (Normal) ===
         
         # Define os eventos
         event1 = rule.event1 or current_event  # Se não especificado, usa o evento atual
@@ -290,7 +346,6 @@ class CustomRulesAnalyzer(BaseAnalyzer):
         if event1 and current_event != event1:
             return False
         
-        actual_field = target_field if target_field else rule.field
         
         # Busca o valor do campo 1 no registro atual (evento 1)
         value1 = record.get(actual_field)
