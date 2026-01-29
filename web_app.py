@@ -478,37 +478,43 @@ def get_filter_options():
     user_id = session.get('user_id')
     ctx = get_analysis_context(user_id)
     
+    print(f"DEBUG: get_filter_options called for user {user_id}", flush=True)
     if not ctx or not ctx['queries']:
+        print("DEBUG: No context or queries found for options", flush=True)
         return jsonify({'success': False, 'options': {}})
     
-    queries = ctx['queries']
+    try:
+        queries = ctx['queries']
     field_labels = ctx.get('field_labels', {})
     
-    # Extrai valores únicos usando set
-    record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))
-    events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
-    fields = sorted(list(set(q.field for q in queries if q.field)))
-    # Para valores, verificamos explicitamente se não é None para incluir 0
-    values = sorted(list(set(str(q.value_found) for q in queries if q.value_found is not None and str(q.value_found) != "")))
-    
-    # Para campos, podemos mandar também o label se quiser, mas por simplicidade mandamos só o nome
-    # O frontend pode usar o mapping se já tiver, ou mandamos aqui:
-    fields_data = []
-    for f in fields:
-        fields_data.append({
-            'value': f,
-            'label': f + (f" ({field_labels.get(f, '')})" if field_labels.get(f) else "")
-        })
+        # Extrai valores únicos usando set
+        record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))
+        events = sorted(list(set(str(q.event) for q in queries if q.event and q.event != "N/A")))
+        fields = sorted(list(set(q.field for q in queries if q.field)))
+        # Para valores, verificamos explicitamente se não é None para incluir 0
+        values = sorted(list(set(str(q.value_found) for q in queries if q.value_found is not None and str(q.value_found) != "")))
         
-    return jsonify({
-        'success': True,
-        'options': {
-            'record_id': record_ids,
-            'event_id': events,
-            'field': fields_data, # Lista de dicts
-            'value': values
-        }
-    })
+        fields_data = []
+        for f in fields:
+            fields_data.append({
+                'value': f,
+                'label': f + (f" ({field_labels.get(f, '')})" if field_labels.get(f) else "")
+            })
+            
+        return jsonify({
+            'success': True,
+            'options': {
+                'record_id': record_ids,
+                'event_id': events,
+                'field': fields_data, # Lista de dicts
+                'value': values
+            }
+        })
+    except Exception as e:
+        print(f"ERROR in get_filter_options: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
 
 
 @app.route('/api/analyze', methods=['POST'])
