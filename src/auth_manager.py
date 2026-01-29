@@ -207,7 +207,9 @@ class AuthManager:
                 }
                 
             return {"success": False, "error": "Invalid token"}
-    
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def refresh_session(self, refresh_token):
         """Refresh session using refresh token"""
         if not self.client:
@@ -232,8 +234,8 @@ class AuthManager:
             print(f"Error refreshing session: {e}")
             return {"success": False, "error": str(e)}
 
-    # Singleton instance
-    auth_manager = AuthManager()
+# Singleton instance
+auth_manager = AuthManager()
 
 def login_required(f):
     """Decorator to protect routes"""

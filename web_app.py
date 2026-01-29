@@ -924,6 +924,37 @@ def create_rule():
             'message': 'Regra criada com sucesso'
         })
     except Exception as e:
+        # Retry logic for JWT Expiration
+        error_msg = str(e)
+        if "JWT expired" in error_msg or "PGRST303" in error_msg:
+            print(f"DEBUG: JWT expired in create_rule. Attempting refresh...")
+            refresh_token = session.get('refresh_token')
+            if refresh_token:
+                refresh_res = auth_manager.refresh_session(refresh_token)
+                if refresh_res.get('success'):
+                    print("DEBUG: Token refreshed successfully. Retrying action.")
+                    new_token = refresh_res['access_token']
+                    try:
+                        # Retry with new token
+                        rule = rules_manager.add_rule(data, user_id, new_token)
+                        
+                        if not rule:
+                             return jsonify({'success': False, 'error': 'Erro ao salvar regra após refresh.'}), 500
+                        
+                        db.log_audit_event(user_id, 'create_rule', 'custom_rules', rule.id, data)
+                        return jsonify({
+                            'success': True,
+                            'rule': rule.to_dict(),
+                            'message': 'Regra criada com sucesso'
+                        })
+                    except Exception as retry_e:
+                        print(f"DEBUG: Retry failed: {retry_e}")
+                        return jsonify({'success': False, 'error': str(retry_e)}), 500
+                else:
+                    print("DEBUG: Refresh failed.")
+            else:
+                 print("DEBUG: No refresh token available.")
+
         print(f"Erro ao criar regra: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -1021,6 +1052,24 @@ def update_rule(rule_id):
             })
         return jsonify({'success': False, 'error': 'Regra não encontrada'}), 404
     except Exception as e:
+        # Retry logic for JWT Expiration
+        if "JWT expired" in str(e) or "PGRST303" in str(e):
+             refresh_token = session.get('refresh_token')
+             if refresh_token:
+                 res = auth_manager.refresh_session(refresh_token)
+                 if res.get('success'):
+                     try:
+                         new_token = res['access_token']
+                         rule = rules_manager.update_rule(rule_id, data, user_id, new_token)
+                         if rule:
+                             db.log_audit_event(user_id, 'update_rule', 'custom_rules', rule.id, data)
+                             return jsonify({
+                                'success': True,
+                                'rule': rule.to_dict(),
+                                'message': 'Regra atualizada com sucesso'
+                             })
+                     except Exception as retry_e:
+                         return jsonify({'success': False, 'error': str(retry_e)}), 500
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1046,6 +1095,23 @@ def delete_rule(rule_id):
             })
         return jsonify({'success': False, 'error': 'Regra não encontrada ou erro ao excluir'}), 404
     except Exception as e:
+        # Retry logic for JWT Expiration
+        if "JWT expired" in str(e) or "PGRST303" in str(e):
+             refresh_token = session.get('refresh_token')
+             if refresh_token:
+                 res = auth_manager.refresh_session(refresh_token)
+                 if res.get('success'):
+                     try:
+                         new_token = res['access_token']
+                         success = rules_manager.delete_rule(rule_id, user_id, new_token)
+                         if success:
+                             db.log_audit_event(user_id, 'delete_rule', 'custom_rules', rule_id)
+                             return jsonify({
+                                'success': True,
+                                'message': 'Regra removida com sucesso'
+                             })
+                     except Exception as retry_e:
+                         return jsonify({'success': False, 'error': str(retry_e)}), 500
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1070,6 +1136,24 @@ def toggle_rule(rule_id):
             })
         return jsonify({'success': False, 'error': 'Regra não encontrada'}), 404
     except Exception as e:
+        # Retry logic for JWT Expiration
+        if "JWT expired" in str(e) or "PGRST303" in str(e):
+             refresh_token = session.get('refresh_token')
+             if refresh_token:
+                 res = auth_manager.refresh_session(refresh_token)
+                 if res.get('success'):
+                     try:
+                         new_token = res['access_token']
+                         rule = rules_manager.toggle_rule(rule_id, user_id, new_token)
+                         if rule:
+                             status = "ativada" if rule.enabled else "desativada"
+                             return jsonify({
+                                'success': True,
+                                'rule': rule.to_dict(),
+                                'message': f'Regra {status} com sucesso'
+                             })
+                     except Exception as retry_e:
+                         return jsonify({'success': False, 'error': str(retry_e)}), 500
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
