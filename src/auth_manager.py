@@ -28,7 +28,7 @@ class AuthManager:
             res = self.client.auth.sign_in_with_oauth({
                 "provider": provider,
                 "options": {
-                    "redirect_to": f"{os.getenv('SUPABASE_APP_URL', 'http://localhost:5000')}/auth/callback"
+                    "redirect_to": f"{os.getenv('SUPABASE_APP_URL', 'https://auditpro-0q8m.onrender.com')}/auth/callback"
                 }
             })
             return res.url
