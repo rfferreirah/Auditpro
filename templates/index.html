@@ -1455,9 +1455,14 @@
                 const response = await fetch('/api/events');
                 const data = await response.json();
 
-                if (data.success && data.events) {
-                    projectEvents = data.events;
-                    populateEventDropdowns();
+                if (data.success && data.options) {
+                    filterOptionsData = data.options;
+                    populateFormDropdowns();
+                } else {
+                    console.warn('Filter options failed:', data);
+                    document.querySelectorAll('.popover-options').forEach(el => {
+                        el.innerHTML = '<div style="padding:5px; color:orange;">Sem dados (re-analise).</div>';
+                    });
                 }
             } catch (error) {
                 console.error('Erro ao carregar eventos:', error);

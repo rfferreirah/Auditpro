@@ -181,29 +181,28 @@ class RulesManager:
                 "field": "range_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": False
             },
             {
-                "id": "sys_choices",
-                "name": "Opções Inválidas (Choices)",
-                "message": "Valor selecionado não existe na lista de opções",
+                "id": "00000000-0000-0000-0000-000000000001",
+                "name": "Branching Logic (Campos Ocultos)",
+                "message": "Campo não deveria ter valor pois a lógica de branching o oculta",
                 "rule_type": "system",
-                "field": "choice_check", "operator": "check", "value": "Active", "priority": "Média", "enabled": False
-            },
-            # Novos Analyzers
-            {
-                "id": "sys_temporal",
-                "name": "Análise Temporal (Cronologia)",
-                "message": "Inconsistência cronológica nas datas ou timeline de eventos",
-                "rule_type": "system",
-                "field": "temporal_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": False
+                "field": "branching_check", "operator": "check", "value": "Active", "priority": "Média", "enabled": True
             },
             {
-                "id": "sys_clinical",
+                "id": "00000000-0000-0000-0000-000000000002",
+                "name": "Campos Obrigatórios (Missing)",
+                "message": "Campo obrigatório está vazio",
+                "rule_type": "system",
+                "field": "missing_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": True
+            },
+            {
+                "id": "00000000-0000-0000-0000-000000000003",
                 "name": "Análise Clínica (Consistência)",
                 "message": "Inconsistência médica (Ex: Sistólica < Diastólica, IMC, Idade)",
                 "rule_type": "system",
                 "field": "clinical_check", "operator": "check", "value": "Active", "priority": "Alta", "enabled": False
             },
             {
-                "id": "sys_operational",
+                "id": "00000000-0000-0000-0000-000000000004",
                 "name": "Análise Operacional (Logs)",
                 "message": "Padrão suspeito de edição ou performance",
                 "rule_type": "system",
