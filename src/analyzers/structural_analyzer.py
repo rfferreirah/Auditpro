@@ -108,6 +108,8 @@ class StructuralAnalyzer(BaseAnalyzer):
             return  # Campo não deveria aparecer por branching logic
         
         if self.is_empty(value):
+            # DEBUG LOG to diagnose false positives
+            print(f"DEBUG_EMPTY_CHECK: Flagged '{field_meta.field_name}' for Record {record_id} in {event}. Raw Value='{value}' Type={type(value)}", flush=True)
             self.add_query(
                 record_id=record_id,
                 event=event,
