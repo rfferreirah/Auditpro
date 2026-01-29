@@ -484,8 +484,12 @@ def get_filter_options():
         return jsonify({'success': False, 'options': {}})
     
     try:
-        queries = ctx['queries']
+    queries = ctx['queries']
     field_labels = ctx.get('field_labels', {})
+except KeyError:
+    print("DEBUG: 'queries' not found in ctx", flush=True)
+    return jsonify({'success': False, 'options': {}})
+
     
         # Extrai valores únicos usando set
         record_ids = sorted(list(set(str(q.record_id) for q in queries if q.record_id)))

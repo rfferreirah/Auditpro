@@ -1114,13 +1114,11 @@
             if (data.debug_params) {
                 const p = data.debug_params;
                 debugHtml = `
-                    <div style="font-size: 0.75rem; color: #666; margin-top: 10px; border-top: 1px solid #eee; padding-top: 5px;">
-                        <strong>Debug Info:</strong> 
-                        Recebido Campo='${p.received_field || ''}' 
-                        Valor='${p.received_value || ''}'
-                        Prioridade='${p.received_priority || ''}'
-                        Total Filtrado=${p.filter_count_after_value}
-                        Ativos=[${(p.active_columns || []).join(', ')}]
+                    <div style="font-size: 0.85rem; color: #000; background: #ffeb3b; margin-top: 10px; padding: 10px; border-radius: 4px; font-family: monospace; border: 2px solid #000;">
+                        <strong>🛠️ DEBUG INFO:</strong><br/>
+                        PARAMETROS RECEBIDOS: Campo='${p.received_field || 'N/A'}' | Valor='${p.received_value || 'N/A'}' | Prioridade='${p.received_priority || 'N/A'}'<br/>
+                        TOTAL FILTRADO: ${p.filter_count_after_value}<br/>
+                        COLUNAS ATIVAS: [${(p.active_columns || []).join(', ')}]
                     </div>`;
             }
             const tableContainer = document.querySelector('.query-table-container');
