@@ -375,8 +375,12 @@ def get_queries_page():
     filter_issue_type = request.args.get('filter_issue_type', '').strip().lower()
     filter_priority = request.args.get('filter_priority', '').strip().lower()
 
-    # DEBUG LOGS
-    print(f"DEBUG_FILTER_PARAMS: Val='{filter_value}', Priority='{filter_priority}', Field='{filter_field}'", flush=True)
+    # DEBUG LOGS TO FILE
+    try:
+        with open('filter_debug.log', 'a') as f:
+             f.write(f"\n--- REQUEST {datetime.now()} ---\n")
+             f.write(f"PARAMS: Val='{filter_value}', Pri='{filter_priority}', Field='{filter_field}'\n")
+    except: pass
 
     queries = ctx['queries']
     client = ctx['client']
@@ -387,7 +391,7 @@ def get_queries_page():
         queries = [q for q in queries if q.priority == priority_filter]
 
     # 2. Filtros de Coluna (Excel-like) - Lógica OR entre opções selecionadas
-    def check_filter(text_val, filter_input):
+    def check_filter(text_val, filter_input, field_name="unknown"):
         if not filter_input:
             return True
         # Converte o valor da célula para string minúscula
@@ -396,24 +400,30 @@ def get_queries_page():
         # Opções marcadas (separadas por vírgula)
         search_terms = [t.strip() for t in filter_input.split(',')]
         
-        # Exact Match: se o valor da célula for IGUAL a qualquer um dos termos selecionados
-        return any(term == text_val for term in search_terms if term)
+        # Exact Match
+        match = any(term == text_val for term in search_terms if term)
+        
+        # Log failures for debug (sampling)
+        if not match and field_name == 'value' and filter_input == '14,16': # specific debug
+             try:
+                 with open('filter_debug.log', 'a') as f:
+                     f.write(f"NO MATCH: Val='{text_val}' vs Terms={search_terms}\n")
+             except: pass
+             
+        return match
 
     if filter_record_id:
-        queries = [q for q in queries if check_filter(q.record_id, filter_record_id)]
+        queries = [q for q in queries if check_filter(q.record_id, filter_record_id, 'record')]
     if filter_event:
-        queries = [q for q in queries if check_filter(q.event, filter_event)]
+        queries = [q for q in queries if check_filter(q.event, filter_event, 'event')]
     if filter_field:
-        # Para campo, verificamos tanto o nome técnico quanto o label
-        # (Neste caso, mantemos partial match apenas para label se desejar, mas checkboxes usam keys exatas)
-        # Vamos assumir Exact Match para o 'field' (nome técnico) que é o value do checkbox
-        queries = [q for q in queries if check_filter(q.field, filter_field)]
+        queries = [q for q in queries if check_filter(q.field, filter_field, 'field')]
     if filter_value:
-        queries = [q for q in queries if check_filter(q.value_found, filter_value)]
+        queries = [q for q in queries if check_filter(q.value_found, filter_value, 'value')]
     if filter_issue_type:
-         queries = [q for q in queries if check_filter(q.issue_type, filter_issue_type)]
+         queries = [q for q in queries if check_filter(q.issue_type, filter_issue_type, 'issue')]
     if filter_priority:
-         queries = [q for q in queries if check_filter(q.priority, filter_priority)]
+         queries = [q for q in queries if check_filter(q.priority, filter_priority, 'priority')]
 
     import unicodedata
     def remove_accents(input_str):
