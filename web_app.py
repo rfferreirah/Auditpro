@@ -362,6 +362,7 @@ def get_queries_page():
     search_term = request.args.get('search', '').strip().lower()
     
     print(f"DEBUG_PAGINATION: Page={page}, Size={page_size}, Search='{search_term}'", flush=True)
+    print(f"DEBUG_FULL_ARGS: {dict(request.args)}", flush=True)
     
     queries = ctx['queries']
     client = ctx['client']

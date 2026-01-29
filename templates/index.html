@@ -1179,7 +1179,7 @@
 
         async function loadPage(page, priority = 'all', page_size = 50, search = '') {
             let url = `/api/queries?page=${page}&page_size=${page_size}`;
-            if (priority && priority !== 'all') url += `&priority=${priority}`;
+            if (priority && priority !== 'all') url += `&priority=${encodeURIComponent(priority)}`;
             if (search) url += `&search=${encodeURIComponent(search)}`;
 
             // Collect Column Filters
