@@ -1894,17 +1894,31 @@
 
         // Update hidden input when checkboxes change
         window.updateHiddenInput = function (checkbox) {
-            const container = checkbox.closest('.popover-options');
-            const hiddenInput = container.nextElementSibling; // .filter-input
+            try {
+                // DEBUG TRACE
+                console.log("DEBUG: Checkbox changed", checkbox.value);
+                alert("DEBUG: Click no checkbox detectado: " + checkbox.value);
 
-            const checkedValues = Array.from(container.querySelectorAll('input:checked'))
-                .map(cb => cb.value);
+                const container = checkbox.closest('.popover-options');
+                if (!container) { alert("Erro: container não encontrado"); return; }
 
-            hiddenInput.value = checkedValues.join(',');
-            updateFilterIcons();
+                const hiddenInput = container.nextElementSibling; // .filter-input
+                if (!hiddenInput) { alert("Erro: input hidden não encontrado"); return; }
 
-            // Reload page with new filters
-            loadPage(1);
+                const checkedValues = Array.from(container.querySelectorAll('input:checked'))
+                    .map(cb => cb.value);
+
+                // console.log("DEBUG: Checked values:", checkedValues);
+                hiddenInput.value = checkedValues.join(',');
+                updateFilterIcons();
+
+                // Reload page with new filters
+                // Use globals
+                loadPage(1, currentFilter, currentPageSize, currentSearch);
+            } catch (e) {
+                alert("Erro no updateHiddenInput: " + e.message);
+                console.error(e);
+            }
         }
 
         // Local search in popover
