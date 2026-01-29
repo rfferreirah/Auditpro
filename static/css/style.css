@@ -22,15 +22,27 @@
 }
 
 [data-theme="light"] {
-    /* Light Theme Overrides */
+    /* Light Theme Overrides - SBOC Style (Navy Blue) */
+    --primary: #002753;
+    /* Navy Blue */
+    --primary-dark: #001a3d;
+    /* Darker Navy */
+    --primary-light: #2c4f80;
+    /* Lighter Navy/Blue */
+
     --bg-body: #f8fafc;
-    --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+    /* Cleaner, whiter gradient */
+    --bg-gradient: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+
     --bg-card: #ffffff;
-    --bg-input: #f1f5f9;
-    --text-primary: #1a202c;
-    --text-secondary: #64748b;
+    --bg-input: #f8fafc;
+    /* Lighter input background */
+    --text-primary: #0f172a;
+    /* Darker text for contrast */
+    --text-secondary: #475569;
     --border: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 6px -1px rgba(0, 39, 83, 0.08);
+    /* Navy tinted shadow */
 }
 
 * {
@@ -75,8 +87,8 @@ body {
 }
 
 [data-theme="light"] .header h1 {
-    /* Light Mode - Solid Dark Blue */
-    color: #1e3a8a;
+    /* Light Mode - Solid Navy Blue */
+    color: var(--primary);
     background: none;
     -webkit-text-fill-color: initial;
 }
@@ -320,7 +332,7 @@ body {
 }
 
 [data-theme="light"] .stat-value.total {
-    color: #1d4ed8;
+    color: var(--primary);
 }
 
 [data-theme="light"] .stat-value.high {
