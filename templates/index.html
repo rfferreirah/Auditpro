@@ -1897,13 +1897,12 @@
             try {
                 // DEBUG TRACE
                 console.log("DEBUG: Checkbox changed", checkbox.value);
-                alert("DEBUG: Click no checkbox detectado: " + checkbox.value);
 
                 const container = checkbox.closest('.popover-options');
-                if (!container) { alert("Erro: container não encontrado"); return; }
+                if (!container) return; // Silent fail
 
                 const hiddenInput = container.nextElementSibling; // .filter-input
-                if (!hiddenInput) { alert("Erro: input hidden não encontrado"); return; }
+                if (!hiddenInput) return; // Silent fail
 
                 const checkedValues = Array.from(container.querySelectorAll('input:checked'))
                     .map(cb => cb.value);
@@ -1988,11 +1987,8 @@
 
                 // FORCE BINDING
                 checkbox.addEventListener('change', function (e) {
-                    console.log("DEBUG: Evento change disparado via Listener", this.value);
                     if (window.updateHiddenInput) {
                         window.updateHiddenInput(this);
-                    } else {
-                        alert("ERRO CRITICO: updateHiddenInput não encontrado!");
                     }
                 });
                 // Fallback click

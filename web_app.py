@@ -398,14 +398,6 @@ def get_queries_page():
         
         # Exact Match
         match = any(term == text_val for term in search_terms if term)
-        
-        # Log failures for debug (sampling)
-        if not match and field_name == 'value' and filter_input == '14,16': # specific debug
-             try:
-                 with open('filter_debug.log', 'a') as f:
-                     f.write(f"NO MATCH: Val='{text_val}' vs Terms={search_terms}\n")
-             except: pass
-             
         return match
 
     if filter_record_id:
@@ -435,6 +427,7 @@ def get_queries_page():
         def match_field(val):
             return search_normalized in remove_accents(val)
 
+        queries_before = len(queries)
         queries = [
             q for q in queries 
             if match_field(q.record_id) or 
@@ -447,6 +440,7 @@ def get_queries_page():
                match_field(q.priority) or
                match_field(q.suggested_action)
         ]
+        print(f"[DEBUG search] Results: {len(queries)} (was {queries_before})", flush=True)
     
     # Calcula paginação
     total_queries = len(queries)
