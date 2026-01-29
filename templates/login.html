@@ -168,111 +168,105 @@
     </div>
 
     <script>
+        // Check for Supabase Auth hash (OAuth callback override)
+        // #access_token=...&refresh_token=...
+        function processHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash.includes('access_token')) {
+                const params = new URLSearchParams(hash);
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+
+                if (accessToken) {
+                    // Show loading state
+                    document.querySelector('.login-card').innerHTML =
+                        '<div style="padding: 2rem;"><h3>Autenticando...</h3><p>Aguarde um momento.</p></div>';
+
+                    // Send token to backend
+                    fetch('/auth/set_session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                window.location.href = '/';
+                            } else {
+                                alert('Erro ao criar sessão: ' + data.error);
+                                window.location.hash = '';
+                                window.location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            alert('Erro de conexão: ' + error);
+                        });
+                }
+            }
+        }
+        processHash();
+
         // Toggle Password Visibility
         const togglePassword = document.getElementById('togglePassword');
         const password = document.getElementById('password');
 
-        <script>
-        // Check for Supabase Auth hash (OAuth callback override)
-            // #access_token=...&refresh_token=...
-            function processHash() {
-            const hash = window.location.hash.substring(1);
-            if (hash.includes('access_token')) {
-                const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function () {
+                // toggle the type attribute
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
 
-            if (accessToken) {
-                // Show loading state
-                document.querySelector('.login-card').innerHTML =
-                '<div style="padding: 2rem;"><h3>Autenticando...</h3><p>Aguarde um momento.</p></div>';
-
-            // Send token to backend
-            fetch('/auth/set_session', {
-                method: 'POST',
-            headers: {'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                access_token: accessToken,
-            refresh_token: refreshToken
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                window.location.href = '/';
-                        } else {
-                alert('Erro ao criar sessão: ' + data.error);
-            window.location.hash = '';
-            window.location.reload(); 
-                        }
-                    })
-                    .catch(error => {
-                alert('Erro de conexão: ' + error);
-                    });
+                // toggle the icon
+                if (type === 'text') {
+                    this.classList.remove('ph-eye');
+                    this.classList.add('ph-eye-slash');
+                    this.setAttribute('title', 'Ocultar senha');
+                } else {
+                    this.classList.remove('ph-eye-slash');
+                    this.classList.add('ph-eye');
+                    this.setAttribute('title', 'Mostrar senha');
                 }
-            }
-        }
-            processHash();
-
-            // Toggle Password Visibility
-            const togglePassword = document.getElementById('togglePassword');
-            const password = document.getElementById('password');
-
-            if (togglePassword) {
-                togglePassword.addEventListener('click', function () {
-                    // toggle the type attribute
-                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-                    password.setAttribute('type', type);
-
-                    // toggle the icon
-                    if (type === 'text') {
-                        this.classList.remove('ph-eye');
-                        this.classList.add('ph-eye-slash');
-                        this.setAttribute('title', 'Ocultar senha');
-                    } else {
-                        this.classList.remove('ph-eye-slash');
-                        this.classList.add('ph-eye');
-                        this.setAttribute('title', 'Mostrar senha');
-                    }
-                });
+            });
         }
 
-            // Theme Logic
-            // ... (rest of theme logic remains the same, assuming it follows the snippet)
-            const themeToggleBtn = document.getElementById('themeToggleBtn');
-            const html = document.documentElement;
+        // Theme Logic
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const html = document.documentElement;
 
-            if (themeToggleBtn) {
+        if (themeToggleBtn) {
             const icon = themeToggleBtn.querySelector('i');
 
             function updateIcon(theme) {
                 if (theme === 'light') {
-                icon.classList.remove('ph-sun');
-            icon.classList.add('ph-moon');
+                    icon.classList.remove('ph-sun');
+                    icon.classList.add('ph-moon');
                 } else {
-                icon.classList.remove('ph-moon');
-            icon.classList.add('ph-sun');
+                    icon.classList.remove('ph-moon');
+                    icon.classList.add('ph-sun');
                 }
             }
 
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
                 html.setAttribute('data-theme', 'light');
-            updateIcon('light');
+                updateIcon('light');
             } else {
                 updateIcon('dark');
             }
 
             themeToggleBtn.addEventListener('click', () => {
                 const currentTheme = html.getAttribute('data-theme');
-            if (currentTheme === 'light') {
-                html.removeAttribute('data-theme');
-            localStorage.setItem('theme', 'dark');
-            updateIcon('dark');
+                if (currentTheme === 'light') {
+                    html.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'dark');
+                    updateIcon('dark');
                 } else {
-                html.setAttribute('data-theme', 'light');
-            localStorage.setItem('theme', 'light');
-            updateIcon('light');
+                    html.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    updateIcon('light');
                 }
             });
         }
