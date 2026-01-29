@@ -1109,6 +1109,9 @@
             // Query table
             updateQueryTable(data.queries);
 
+            // REFRESH FILTERS - FIXED BUG
+            fetchFilterOptions();
+
             // DEBUG FOOTER
             let debugHtml = '';
             if (data.debug_params) {
