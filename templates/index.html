@@ -436,6 +436,10 @@
                                 title="Confere se as opções selecionadas (em radios/dropdowns) correspondem aos códigos válidos definidos no projeto.">
                                 <input type="checkbox" id="checkChoices" checked> Opções Inválidas
                             </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"
+                                title="Verifica se datas de nascimento, inclusão e outros campos históricos não estão no futuro.">
+                                <input type="checkbox" id="checkFutureDate" checked> Datas no Futuro
+                            </label>
                         </div>
                     </details>
 
@@ -1005,6 +1009,7 @@
             if (document.getElementById('checkRange')?.checked) structuralChecks.push('sys_range');
             if (document.getElementById('checkFormat')?.checked) structuralChecks.push('sys_format');
             if (document.getElementById('checkChoices')?.checked) structuralChecks.push('sys_choices');
+            if (document.getElementById('checkFutureDate')?.checked) structuralChecks.push('sys_future_date');
 
             analyzeBtn.disabled = true;
             testBtn.disabled = true;

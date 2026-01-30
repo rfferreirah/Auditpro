@@ -35,7 +35,8 @@ class StructuralAnalyzer(BaseAnalyzer):
             '00000000-0000-0000-0000-000000000006', # sys_range
             '00000000-0000-0000-0000-000000000005', # sys_format
             '00000000-0000-0000-0000-000000000007', # sys_choices
-            '00000000-0000-0000-0000-000000000001'  # sys_branching
+            '00000000-0000-0000-0000-000000000001', # sys_branching
+            '00000000-0000-0000-0000-000000000008'  # sys_future_date
         ]
         
         # Cache fields by form for quick lookup
@@ -117,6 +118,12 @@ class StructuralAnalyzer(BaseAnalyzer):
                     self._check_branching_logic_violation(
                         record_id, event, field_meta, value, should_exist
                     )
+                
+                # New check for future dates
+                if self.is_check_enabled('sys_future_date', '00000000-0000-0000-0000-000000000008'): 
+                    self._check_future_date(
+                        record_id, event, field_meta, value, should_exist
+                    )
         
         return self.queries
 
@@ -124,6 +131,11 @@ class StructuralAnalyzer(BaseAnalyzer):
         """Verifica se uma checagem está habilitada (por chave ou UUID)."""
         if not self.enabled_checks:
             return False
+        # Special case: sys_future_date might not be in the list if using old defaults, 
+        # so we force it if enabled_checks is explicitly using the default set 
+        # (but here enabled_checks is a list, we can't easily know if it's default).
+        # However, QueryGenerator usually passes specific checks. 
+        # For now, we rely on the init default.
         return key in self.enabled_checks or uuid in self.enabled_checks
     
     def _check_required_field(
@@ -176,9 +188,8 @@ class StructuralAnalyzer(BaseAnalyzer):
                  return # Skip checks if form is incomplete and completely empty
 
         if self.is_empty(value):
-            # ... (rest of the function)
             # DEBUG LOG to diagnose false positives
-            print(f"DEBUG_EMPTY_CHECK: Flagged '{field_meta.field_name}' for Record {record_id} in {event}. Raw Value='{value}' Type={type(value)}", flush=True)
+            # print(f"DEBUG_EMPTY_CHECK: Flagged '{field_meta.field_name}' for Record {record_id} in {event}. Raw Value='{value}' Type={type(value)}", flush=True)
             self.add_query(
                 record_id=record_id,
                 event=event,
@@ -317,7 +328,60 @@ class StructuralAnalyzer(BaseAnalyzer):
                 priority="Média",
                 suggested_action=f"Corrigir o valor para o formato: {expected_format}.",
             )
-    
+            
+    def _check_future_date(
+        self,
+        record_id: str,
+        event: str,
+        field_meta: FieldMetadata,
+        value: any,
+        should_exist: bool,
+    ) -> None:
+        """Verifica se datas estão no futuro."""
+        if self.is_empty(value) or not should_exist:
+            return
+            
+        validation_type = field_meta.validation_type
+        if not validation_type or "date" not in validation_type:
+            return
+
+        date_val = self.parse_date(value)
+        if date_val is None:
+            return # _check_format will catch this
+            
+        from datetime import datetime
+        now = datetime.now()
+        
+        # Ignore time component for pure dates unless it's datetime
+        if "datetime" not in validation_type:
+            date_val = date_val.replace(hour=0, minute=0, second=0, microsecond=0)
+            now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+        if date_val > now:
+            # Check if this field allows future dates (heuristic based on name)
+            # Allowed terms
+            future_terms = ['next', 'expected', 'forecast', 'scheduled', 'proxima', 'agendada', 'previsao']
+            if any(term in field_meta.field_name.lower() or term in field_meta.field_label.lower() for term in future_terms):
+                return
+                
+            priority = "Média"
+            # High priority for critical fields like Birth Date or Enrollment
+            critical_terms = ['birth', 'dob', 'nasc', 'enroll', 'inclusao', 'consent', 'death', 'obito', 'admission', 'admissao']
+            if any(term in field_meta.field_name.lower() for term in critical_terms):
+                priority = "Alta"
+                
+            self.add_query(
+                record_id=record_id,
+                event=event,
+                instrument=field_meta.form_name,
+                field=field_meta.field_name,
+                value_found=value,
+                issue_type="physiologically_impossible" if priority == "Alta" else "date_out_of_order",
+                explanation=f"A data '{value}' está no futuro, o que não é esperado para este campo.",
+                priority=priority,
+                suggested_action="Verificar se a data foi digitada corretamente (ano incorreto?).",
+            )
+
     def _check_choices(
         self,
         record_id: str,
