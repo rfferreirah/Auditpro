@@ -37,6 +37,13 @@ class StructuralAnalyzer(BaseAnalyzer):
             '00000000-0000-0000-0000-000000000007', # sys_choices
             '00000000-0000-0000-0000-000000000001'  # sys_branching
         ]
+        
+        # Cache fields by form for quick lookup
+        self.fields_by_form = {}
+        for field in self.project_data.metadata:
+            if field.form_name not in self.fields_by_form:
+                self.fields_by_form[field.form_name] = []
+            self.fields_by_form[field.form_name].append(field.field_name)
     
     def analyze(self) -> list[Query]:
         """
