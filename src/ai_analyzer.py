@@ -71,8 +71,35 @@ class AIAnalyzer:
             key = api_key or config.GOOGLE_API_KEY
             if key:
                 genai.configure(api_key=key)
-                # Tenta modelo flash, se falhar o fallback é tratado nas chamadas ou init
-                self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Lista de prioridade de modelos (do mais novo para o mais estável)
+                models_to_try = [
+                    'gemini-2.0-flash-exp',  # Experimental/Bleeding Edge
+                    'gemini-1.5-pro',        # Latest Stable High-End
+                    'gemini-1.5-flash',      # Latest Stable Fast
+                    'gemini-pro'             # Legacy fallback
+                ]
+                
+                self.gemini_model = None
+                # O modelo será selecionado dinamicamente na primeira chamada ou fixado aqui?
+                # Como a validação de existência do modelo requer uma chamada, 
+                # vamos inicializar com o primeiro da lista e deixar o fallback para o método _invoke_gemini
+                # Mas para ser mais robusto, podemos tentar listar modelos:
+                try:
+                    # check available models (optional optimization)
+                    # For performance, just assume the top preference is desired.
+                    self.gemini_model = genai.GenerativeModel('gemini-1.5-pro') # Default START point, logic in invoke handles overrides
+                    # Correction: User wants NEWER. Let's set the default to the experimental/newest if intended.
+                    # But 2.0-flash-exp might fail instantly. 
+                    # Let's set a strictly 'newest' strategy in _invoke_gemini.
+                    pass
+                except:
+                    pass
+                
+                # Vamos simplificar: Definimos o modelo principal como 1.5-pro (que é "novo" e estável).
+                # Se o usuário quer "mais novo", vamos configurar explicitamente para tentar 2.0 também se falhar.
+                self.gemini_model_name = 'gemini-1.5-pro' # Default initial
+                self.gemini_model = genai.GenerativeModel(self.gemini_model_name)
     
     @property
     def is_available(self) -> bool:
@@ -82,27 +109,37 @@ class AIAnalyzer:
         return self.llm is not None
     
     def _invoke_gemini(self, system_instruction: str, user_input: str) -> str:
-        """Invocação direta do Gemini com tratamento de erros e fallback."""
-        if not self.gemini_model:
-            raise Exception("Gemini model not initialized")
-            
+        """Invocação direta do Gemini com estratégia de Fallback de Modelos."""
+        
+        # Lista de modelos para tentar em ordem
+        # Tenta 1.5 Pro primeiro (pedido do usuário por "mais novo" e robusto), depois 1.5 Flash, depois Pro 1.0
+        candidate_models = [
+            'gemini-1.5-pro',
+            'gemini-2.0-flash-exp', # Se disponível
+            'gemini-1.5-flash',
+            'gemini-pro'
+        ]
+
         full_prompt = f"{system_instruction}\n\nUser Request:\n{user_input}"
         
-        try:
-            response = self.gemini_model.generate_content(full_prompt)
-            return response.text
-        except Exception as e:
-            # Fallback trivial para gemini-pro se o erro for 404/not found
-            error_str = str(e)
-            if "404" in error_str or "not found" in error_str.lower():
-                print("DEBUG: Fallback to gemini-pro")
-                try:
-                    fallback_model = genai.GenerativeModel('gemini-pro')
-                    response = fallback_model.generate_content(full_prompt)
-                    return response.text
-                except Exception as e2:
-                    raise Exception(f"Gemini Error (Primary & Fallback): {str(e2)}")
-            raise e
+        last_error = None
+        
+        for model_name in candidate_models:
+            try:
+                # Instancia o modelo sob demanda para garantir a tentativa correta
+                model = genai.GenerativeModel(model_name)
+                response = model.generate_content(full_prompt)
+                return response.text
+            except Exception as e:
+                error_str = str(e)
+                # Se for erro de "Not Found" ou API version, tenta o próximo.
+                # Se for outro erro (ex: quota), talvez devesse parar, mas fallback ajuda.
+                print(f"DEBUG: Failed with {model_name}: {error_str}")
+                last_error = e
+                continue
+                
+        # Se chegou aqui, todos falharam
+        raise Exception(f"All Gemini models failed. Last error: {str(last_error)}")
 
     def analyze(self, project_data: ProjectData, include_logs: bool = False, structural_checks: list[str] = None) -> QualityReport:
         """
