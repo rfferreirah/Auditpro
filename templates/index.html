@@ -92,28 +92,66 @@
             }
         }
 
-        /* Action Column Fix */
+        /* Action Column Fix - Ensuring it fits */
         .query-table th:last-child,
         .query-table td:last-child {
-            width: 150px;
-            /* Reduced from 240px */
-            min-width: 150px;
+            width: 140px;
+            min-width: 140px;
             text-align: center;
             white-space: nowrap;
             padding-right: 0.5rem;
+            position: sticky;
+            /* Sticky action column */
+            right: 0;
+            background: var(--bg-card);
+            /* Match background so it covers scrolled content */
+            z-index: 10;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow separator */
+        }
+
+        /* Ensure table header for action column also matches bg */
+        .query-table th:last-child {
+            background: var(--bg-input);
         }
 
         .query-table-container {
-            overflow-x: hidden;
-            /* Hide scrollbar as requested */
+            overflow-x: auto;
+            /* Restore scroll but make it subtle */
             width: 100%;
-            padding-bottom: 0;
+            padding-bottom: 0.5rem;
+        }
+
+        /* Optimize other columns to prevent massive width */
+        .query-table th:nth-child(3),
+        .query-table td:nth-child(3) {
+            /* Campo */
+            max-width: 200px;
+            white-space: normal;
+            /* Allow wrap */
+            word-break: break-word;
+            /* Wrap long words */
+        }
+
+        .query-table th:nth-child(4),
+        .query-table td:nth-child(4) {
+            /* Valor */
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Custom Scrollbar for the table container specifically to be thin */
+        .query-table-container::-webkit-scrollbar {
+            height: 6px;
         }
 
         .query-table {
             width: 100%;
-            table-layout: auto;
-            /* Let columns adjust */
+            border-collapse: separate;
+            border-spacing: 0;
+            /* table-layout: fixed; Optional: forces fixed width but might break responsiveness */
         }
 
         .btn-sm {
