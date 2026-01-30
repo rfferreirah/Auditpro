@@ -106,8 +106,7 @@
             background: var(--bg-card);
             /* Match background so it covers scrolled content */
             z-index: 10;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-            /* Subtle shadow separator */
+            /* box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); Removed */
         }
 
         /* Ensure table header for action column also matches bg */
@@ -1333,8 +1332,8 @@
                         </span>
                     </td>
                     <td style="text-align: center;">
-                        <a href="${q.redcap_link}" target="_blank" class="btn btn-secondary" 
-                           style="padding: 0.3rem 0.6rem; font-size: 0.8rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; width: 100%; border: 1px solid var(--border);"
+                        <a href="${q.redcap_link}" target="_blank" class="btn btn-redcap" 
+                           style="padding: 0.3rem 0.6rem; font-size: 0.8rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; width: 100%;"
                            title="Abre o formulário diretamente para correção.">
                             <i class="ph ph-arrow-square-out"></i> Verificar no REDCap
                         </a>
