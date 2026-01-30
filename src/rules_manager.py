@@ -102,55 +102,44 @@ class RulesManager:
         pass
     
     def load_rules(self, user_id=None, token=None) -> list[CustomRule]:
-        """Carrega todas as regras do banco de dados."""
+        """Carrega todas as regras do banco de dados (Otimizado)."""
         if not user_id:
-             # Retorna lista vazia ou regras globais se implementar cache/fallback
              return []
              
+        # 1. Busca regras UMA VEZ
         data = db.get_custom_rules(user_id, token)
         
-        # Garante que todas as regras de sistema existam
-        self._ensure_system_rules(user_id, token, data)
+        # 2. Verifica regras de sistema faltantes
+        existing_ids = {r.get('id') for r in data}
+        system_defs = self._get_system_rules_definitions()
         
-        # Recarrega para incluir as recém-criadas
-        data = db.get_custom_rules(user_id, token)
-        
-        # FILTRO DE LIMPEZA VISUAL (Remove duplicatas legadas)
-        # Remove regras que têm nome de sistema mas ID incorreto (não começam com sys_)
-        system_names = {
-            "Violações de Branching Logic",
-            "Campos Obrigatórios Vazios", 
-            "Formatos Inválidos",
-            "Valores Fora do Limite (Range)",
-            "Opções Inválidas (Choices)",
-            "Análise Temporal (Cronologia)",
-            "Análise Clínica (Consistência)",
-            "Análise Operacional (Logs)"
-        }
+        for rule_def in system_defs:
+            if rule_def['id'] not in existing_ids:
+                # Se faltar, adiciona no DB e na lista local (Evita re-fetch)
+                try:
+                    print(f"Seeding missing system rule: {rule_def['id']}")
+                    saved_rule = self.add_rule(rule_def, user_id, token)
+                    if saved_rule:
+                        data.append(saved_rule.to_dict())
+                except Exception as e:
+                    print(f"Erro ao criar regra de sistema {rule_def['id']}: {e}")
+
+        # 3. FILTRO DE LIMPEZA VISUAL (Remove duplicatas legadas)
+        system_names = {r['name'] for r in system_defs}
         
         cleaned_data = []
         for r in data:
             # Se for um nome de sistema e ID não for sys_, ignora (é duplicata velha)
-            if r['name'] in system_names and not str(r['id']).startswith('sys_'):
-                # Opcional: Tenta deletar silenciosamente do banco para não voltar
-                # self.delete_rule(r['id'], user_id, token) 
-                continue
+            if r.get('name') in system_names and not str(r.get('id')).startswith('sys_') and not str(r.get('id')).startswith('0000'):
+                 # Note: Updated constraint to respect new UUIDs starting with 0000
+                 continue
             cleaned_data.append(r)
             
-        custom_rules = [CustomRule.from_dict(r) for r in cleaned_data]
-        
-        # Adiciona regras de sistema (hardcoded analyzers) para visualização
-        system_rules = self.get_system_rules()
-        
-        return custom_rules + system_rules
+        return [CustomRule.from_dict(r) for r in cleaned_data]
 
-    def _ensure_system_rules(self, user_id, token, existing_rules_data):
-        """Garante que as regras de sistema existam no banco."""
-        existing_ids = {r.get('id') for r in existing_rules_data}
-        
-        system_rules_definitions = [
-            # Estruturais
-            # Estruturais (Legacy removed)
+    def _get_system_rules_definitions(self):
+        """Retorna definições hardcoded das regras de sistema."""
+        return [
             {
                 "id": "00000000-0000-0000-0000-000000000001",
                 "name": "Branching Logic (Campos Ocultos)",
@@ -201,14 +190,6 @@ class RulesManager:
                 "field": "operational_check", "operator": "check", "value": "Active", "priority": "Baixa", "enabled": False
             }
         ]
-
-        try:
-            for rule_def in system_rules_definitions:
-                if rule_def['id'] not in existing_ids:
-                    print(f"Seeding missing system rule: {rule_def['id']}")
-                    self.add_rule(rule_def, user_id, token)
-        except Exception as e:
-            print(f"Erro ao garantir regras de sistema: {e}")
 
     def _seed_default_rules(self, user_id, token):
         # Deprecated by _ensure_system_rules

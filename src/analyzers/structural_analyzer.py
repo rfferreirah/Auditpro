@@ -71,7 +71,7 @@ class StructuralAnalyzer(BaseAnalyzer):
                 # Validações baseadas em configuração (Suporta chaves legíveis e UUIDs)
                 if self.is_check_enabled('sys_required', '00000000-0000-0000-0000-000000000002'):
                     self._check_required_field(
-                        record_id, event, field_meta, value, should_exist
+                        record_id, event, field_meta, value, should_exist, record
                     )
                 
                 if self.is_check_enabled('sys_range', '00000000-0000-0000-0000-000000000006'):
@@ -109,6 +109,7 @@ class StructuralAnalyzer(BaseAnalyzer):
         field_meta: FieldMetadata,
         value: any,
         should_exist: bool,
+        record: dict,
     ) -> None:
         """Verifica campos obrigatórios vazios."""
         if not field_meta.is_required:
@@ -116,8 +117,19 @@ class StructuralAnalyzer(BaseAnalyzer):
         
         if not should_exist:
             return  # Campo não deveria aparecer por branching logic
+            
+        # Check if form is started
+        # REDCap stores form status in [form_name]_complete
+        # 0=Incomplete, 1=Unverified, 2=Complete. Missing/Empty = Not started
+        completion_field = f"{field_meta.form_name}_complete"
+        form_status = record.get(completion_field)
         
+        # If status is None or empty string, form was never touched in this event
+        if form_status is None or str(form_status).strip() == "":
+            return
+
         if self.is_empty(value):
+            # ... (rest of the function)
             # DEBUG LOG to diagnose false positives
             print(f"DEBUG_EMPTY_CHECK: Flagged '{field_meta.field_name}' for Record {record_id} in {event}. Raw Value='{value}' Type={type(value)}", flush=True)
             self.add_query(
