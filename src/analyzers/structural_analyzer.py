@@ -44,6 +44,14 @@ class StructuralAnalyzer(BaseAnalyzer):
             if field.form_name not in self.fields_by_form:
                 self.fields_by_form[field.form_name] = []
             self.fields_by_form[field.form_name].append(field.field_name)
+
+        # Cache forms by event (for longitudinal projects)
+        self.forms_by_event = {}
+        if self.project_data.form_event_mapping:
+            for fem in self.project_data.form_event_mapping:
+                if fem.unique_event_name not in self.forms_by_event:
+                    self.forms_by_event[fem.unique_event_name] = set()
+                self.forms_by_event[fem.unique_event_name].add(fem.form)
     
     def analyze(self) -> list[Query]:
         """
@@ -61,7 +69,16 @@ class StructuralAnalyzer(BaseAnalyzer):
             record_id = record.get(record_id_field, "UNKNOWN")
             event = record.get(event_field, "")
             
+            # Filter valid forms for this event (if longitudinal)
+            valid_forms = None
+            if self.project_data.events and event in self.forms_by_event:
+                valid_forms = self.forms_by_event[event]
+            
             for field_meta in self.project_data.metadata:
+                # SKIP if form not validated for this event
+                if valid_forms is not None and field_meta.form_name not in valid_forms:
+                    continue
+
                 field_name = field_meta.field_name
                 value = record.get(field_name)
                 
@@ -134,6 +151,29 @@ class StructuralAnalyzer(BaseAnalyzer):
         # If status is None or empty string, form was never touched in this event
         if form_status is None or str(form_status).strip() == "":
             return
+            
+        # Special check for status '0' (Incomplete)
+        # Sometimes REDCap returns '0' for forms that were never actually started but existed for the event.
+        # We verify if there is ANY data in the form for this record/event.
+        if str(form_status) == "0":
+             has_data = False
+             form_fields = self.fields_by_form.get(field_meta.form_name, [])
+             completion_field_name = completion_field # e.g. "demographics_complete"
+             
+             for fname in form_fields:
+                 # Check if any field in this form has a value in this record
+                 val = record.get(fname)
+                 
+                 # Helper to check if value is truly present
+                 if val is not None and str(val).strip() != "":
+                     # Ignore the completion field itself if it happens to be in metadata (usually it's not, but safe check)
+                     if fname == completion_field_name:
+                         continue
+                     has_data = True
+                     break
+             
+             if not has_data:
+                 return # Skip checks if form is incomplete and completely empty
 
         if self.is_empty(value):
             # ... (rest of the function)
