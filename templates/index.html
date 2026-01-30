@@ -95,17 +95,25 @@
         /* Action Column Fix */
         .query-table th:last-child,
         .query-table td:last-child {
-            width: 240px;
-            min-width: 240px;
+            width: 150px;
+            /* Reduced from 240px */
+            min-width: 150px;
             text-align: center;
             white-space: nowrap;
-            padding-right: 1rem;
+            padding-right: 0.5rem;
         }
 
         .query-table-container {
-            overflow-x: auto;
+            overflow-x: hidden;
+            /* Hide scrollbar as requested */
             width: 100%;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0;
+        }
+
+        .query-table {
+            width: 100%;
+            table-layout: auto;
+            /* Let columns adjust */
         }
 
         .btn-sm {
@@ -1285,9 +1293,9 @@
                     </td>
                     <td style="text-align: center;">
                         <a href="${q.redcap_link}" target="_blank" class="btn btn-primary" 
-                           style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;"
+                           style="padding: 0.3rem 0.6rem; font-size: 0.8rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.4rem; justify-content: center; width: 100%;"
                            title="Abre o formulário diretamente para correção.">
-                            Verificar no REDCap
+                            <i class="ph ph-arrow-square-out"></i> Verificar
                         </a>
                     </td>
                 </tr>
