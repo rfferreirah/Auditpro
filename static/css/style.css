@@ -75,7 +75,7 @@ body {
 .header h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     /* Default (Dark Mode) - White for validation */
     /* background: linear-gradient(135deg, var(--primary-light), var(--success)); */
     color: #ffffff;
