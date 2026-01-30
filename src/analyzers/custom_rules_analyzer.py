@@ -196,11 +196,12 @@ class CustomRulesAnalyzer(BaseAnalyzer):
             return not self.is_empty(value)  # Viola se NÃO estiver vazio
         elif operator == "not_empty":
             return self.is_empty(value)  # Viola se estiver vazio
-        elif operator == "contains":
             return str_compare not in str_value
             
-        # === SUPORTE A TOKENS DINÂMICOS (ex: _TODAY_) ===
-        if str_compare == "_TODAY_":
+        # === SUPORTE A TOKENS DINÂMICOS (ex: _TODAY_ ou just 'today') ===
+        # Normaliza o valor de comparação para checar se é um token de data
+        normalized_compare = str_compare.upper().strip()
+        if normalized_compare in ["_TODAY_", "TODAY", "HOJE", "_HOJE_"]:
             from datetime import datetime
             date_value = self.parse_date(value)
             if date_value:
