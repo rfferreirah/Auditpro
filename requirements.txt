@@ -38,6 +38,7 @@ matplotlib>=3.8.0
 langchain>=0.1.0
 langchain-anthropic>=0.1.0
 langchain-openai>=0.1.0
+langchain-google-genai>=0.0.3
 
 # Authentication
 supabase>=2.0.0

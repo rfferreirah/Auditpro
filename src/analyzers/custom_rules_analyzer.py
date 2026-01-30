@@ -198,6 +198,17 @@ class CustomRulesAnalyzer(BaseAnalyzer):
             return self.is_empty(value)  # Viola se estiver vazio
         elif operator == "contains":
             return str_compare not in str_value
+            
+        # === SUPORTE A TOKENS DINÂMICOS (ex: _TODAY_) ===
+        if str_compare == "_TODAY_":
+            from datetime import datetime
+            date_value = self.parse_date(value)
+            if date_value:
+                now = datetime.now()
+                # Zera horas para comparação de data pura
+                date_value = date_value.replace(hour=0, minute=0, second=0, microsecond=0)
+                now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                return self._compare_values_cross(date_value, operator, now)
         
         return False
     

@@ -12,6 +12,7 @@ from typing import Optional
 try:
     from langchain_anthropic import ChatAnthropic
     from langchain_openai import ChatOpenAI
+    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
     LANGCHAIN_AVAILABLE = True
@@ -24,7 +25,7 @@ import config
 
 class AIAnalyzer:
     """
-    Analisador com IA usando LangChain (Suporta OpenAI e Claude).
+    Analisador com IA usando LangChain (Suporta OpenAI, Claude e Gemini).
     
     Fornece análises mais profundas e recomendações inteligentes
     baseadas nos dados e queries identificadas.
@@ -47,7 +48,7 @@ class AIAnalyzer:
             key = api_key or config.ANTHROPIC_API_KEY
             if key:
                 self.llm = ChatAnthropic(
-                    model="claude-sonnet-4-20250514",
+                    model="claude-3-5-sonnet-20240620",
                     api_key=key,
                     temperature=0.3,
                     max_tokens=4096,
@@ -60,6 +61,15 @@ class AIAnalyzer:
                     api_key=key,
                     temperature=0.3,
                     max_tokens=4096,
+                )
+        elif self.provider == "gemini":
+            key = api_key or config.GOOGLE_API_KEY
+            if key:
+                self.llm = ChatGoogleGenerativeAI(
+                    model="gemini-1.5-pro",
+                    google_api_key=key,
+                    temperature=0.3,
+                    max_output_tokens=8192,
                 )
     
     @property
@@ -113,7 +123,7 @@ class AIAnalyzer:
         if not self.is_available:
             return {
                 "available": False,
-                "message": "LangChain/Anthropic não configurado. Configure ANTHROPIC_API_KEY no .env"
+                "message": f"IA ({self.provider}) não configurada. Verifique as chaves de API no .env"
             }
         
         # Prepara resumo para a IA
@@ -215,6 +225,14 @@ Retorne apenas o JSON, sem explicações adicionais.""")
         
         try:
             result = chain.invoke({"queries": queries_text})
+            
+            # Limpeza do resultado (Markdown block removal se necessário)
+            result = result.strip()
+            if result.startswith("```json"):
+                result = result[7:]
+            if result.endswith("```"):
+                result = result[:-3]
+                
             # Tenta parsear JSON
             suggestions = json.loads(result)
             return suggestions
@@ -370,7 +388,14 @@ Eventos Disponíveis: [{events_str}]
         1. COMPARAÇÃO SIMPLES: rule_type="comparison", operator="=", value="X"
         2. RANGE NUMÉRICO: rule_type="range", operator="between", value="min,max"
         3. FORMATO (Regex): rule_type="regex", operator="matches", value="pattern"
-        4. CROSS-EVENT (Entre Visitas):
+        4. DATAS RELATIVAS (HOJE/FUTURO):
+           - "A data de nascimento não pode ser no futuro"
+           - JSON: {{"rule_type": "comparison", "operator": "<=", "value": "_TODAY_"}}
+           - "Data de inclusão deve ser anterior a hoje" -> operator "<", value "_TODAY_"
+           - "Data deve ser hoje ou futuro" -> operator ">=", value "_TODAY_"
+           Use o token especial "_TODAY_" sempre que a regra mencionar "hoje", "futuro", "passado" ou "data atual".
+           
+        5. CROSS-EVENT (Entre Visitas):
            - "O peso na Semana 4 deve ser menor que na Triagem"
            - JSON: {{
                "name": "Peso Semana 4 < Triagem",
@@ -410,6 +435,13 @@ Retorne APENAS o JSON válido, sem markdown ou explicações.""")
         
         try:
             result = chain.invoke({"text": text})
+            # Limpeza do resultado (Markdown block removal se necessário)
+            result = result.strip()
+            if result.startswith("```json"):
+                result = result[7:]
+            if result.endswith("```"):
+                result = result[:-3]
+                
             rule_data = json.loads(result)
             return {
                 "success": True,

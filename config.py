@@ -17,9 +17,10 @@ REDCAP_API_TOKEN = os.getenv("REDCAP_API_TOKEN", "")
 REDCAP_TIMEOUT = int(os.getenv("REDCAP_TIMEOUT", "120"))
 
 # === AI Configuration ===
-AI_PROVIDER = os.getenv("AI_PROVIDER", "openai").lower() # 'anthropic' or 'openai'
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").lower() # 'anthropic', 'openai' or 'gemini'
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
 # === Authentication Configuration ===
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
