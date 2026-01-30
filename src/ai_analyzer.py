@@ -66,10 +66,10 @@ class AIAnalyzer:
             key = api_key or config.GOOGLE_API_KEY
             if key:
                 self.llm = ChatGoogleGenerativeAI(
-                    model="gemini-1.5-flash",
+                    model="gemini-pro",
                     google_api_key=key,
                     temperature=0.3,
-                    max_output_tokens=8192,
+                    max_output_tokens=4096,
                 )
     
     @property
