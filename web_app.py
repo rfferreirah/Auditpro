@@ -957,6 +957,28 @@ def get_rules():
             'rules': [r.to_dict() for r in rules]
         })
     except Exception as e:
+        # Retry logic for JWT Expiration
+        if "JWT expired" in str(e) or "PGRST303" in str(e):
+            refresh_token = session.get('refresh_token')
+            if refresh_token:
+                res = auth_manager.refresh_session(refresh_token)
+                if res.get('success'):
+                    try:
+                        # Retry with new token
+                        new_token = res['access_token']
+                        rules = rules_manager.load_rules(user_id, new_token)
+                        return jsonify({
+                            'success': True,
+                            'rules': [r.to_dict() for r in rules]
+                        })
+                    except Exception as retry_e:
+                        print(f"Erro ao retentar carregar regras: {retry_e}")
+                        pass # Fall through to generic error
+                else:
+                     return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
+            else:
+                 return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
+
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1011,6 +1033,8 @@ def create_rule():
                              })
                     except Exception:
                         pass # Fall through to generic error
+                else:
+                     return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
             else:
                  return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
 
@@ -1132,6 +1156,8 @@ def update_rule(rule_id):
                              })
                      except Exception as retry_e:
                          return jsonify({'success': False, 'error': str(retry_e)}), 500
+                 else:
+                       return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1174,6 +1200,8 @@ def delete_rule(rule_id):
                              })
                      except Exception as retry_e:
                          return jsonify({'success': False, 'error': str(retry_e)}), 500
+                 else:
+                       return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1216,6 +1244,8 @@ def toggle_rule(rule_id):
                              })
                      except Exception as retry_e:
                          return jsonify({'success': False, 'error': str(retry_e)}), 500
+                 else:
+                       return jsonify({'success': False, 'error': 'Sessão expirada. Por favor, faça login novamente.'}), 401
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

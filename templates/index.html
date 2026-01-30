@@ -1587,14 +1587,32 @@
         async function loadRules() {
             try {
                 const response = await fetch('/api/rules');
+
+                if (response.status === 401) throw new Error('401');
+
                 const data = await response.json();
 
                 if (data.success) {
                     currentRules = data.rules; // Cache rules
                     renderRulesList(currentRules);
+                } else {
+                    // Check for session expired message in data
+                    if (data.error && data.error.includes("Sessão expirada")) {
+                        window.location.href = "/login";
+                        return;
+                    }
+                    console.warn('Erro ao carregar regras:', data.error);
                 }
             } catch (error) {
                 console.error('Erro ao carregar regras:', error);
+
+                // Silent redirect if session expired
+                if (error.message && error.message.includes("401")) {
+                    window.location.href = "/login";
+                    return;
+                }
+
+                showStatus('Erro ao carregar regras. Tente recarregar a página.', 'error');
             }
         }
 
