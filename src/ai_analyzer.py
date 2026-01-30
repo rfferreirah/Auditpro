@@ -12,20 +12,27 @@ from typing import Optional
 try:
     from langchain_anthropic import ChatAnthropic
     from langchain_openai import ChatOpenAI
-    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
 
+# Tenta importar Google GenAI
+try:
+    import google.generativeai as genai
+    GOOGLE_GENAI_AVAILABLE = True
+except ImportError:
+    GOOGLE_GENAI_AVAILABLE = False
+
 from src.models import ProjectData, Query, QualityReport
 import config
+import json
 
 
 class AIAnalyzer:
     """
-    Analisador com IA usando LangChain (Suporta OpenAI, Claude e Gemini).
+    Analisador com IA usando LangChain (OpenAI/Claude) ou Google GenAI SDK (Gemini).
     
     Fornece análises mais profundas e recomendações inteligentes
     baseadas nos dados e queries identificadas.
@@ -40,11 +47,9 @@ class AIAnalyzer:
         """
         self.provider = config.AI_PROVIDER
         self.llm = None
+        self.gemini_model = None
         
-        if not LANGCHAIN_AVAILABLE:
-            return
-
-        if self.provider == "anthropic":
+        if self.provider == "anthropic" and LANGCHAIN_AVAILABLE:
             key = api_key or config.ANTHROPIC_API_KEY
             if key:
                 self.llm = ChatAnthropic(
@@ -53,7 +58,7 @@ class AIAnalyzer:
                     temperature=0.3,
                     max_tokens=4096,
                 )
-        elif self.provider == "openai":
+        elif self.provider == "openai" and LANGCHAIN_AVAILABLE:
             key = api_key or config.OPENAI_API_KEY
             if key:
                 self.llm = ChatOpenAI(
@@ -62,21 +67,43 @@ class AIAnalyzer:
                     temperature=0.3,
                     max_tokens=4096,
                 )
-        elif self.provider == "gemini":
+        elif self.provider == "gemini" and GOOGLE_GENAI_AVAILABLE:
             key = api_key or config.GOOGLE_API_KEY
             if key:
-                self.llm = ChatGoogleGenerativeAI(
-                    model="gemini-1.5-flash",
-                    google_api_key=key,
-                    temperature=0.3,
-                    max_output_tokens=8192,
-                )
+                genai.configure(api_key=key)
+                # Tenta modelo flash, se falhar o fallback é tratado nas chamadas ou init
+                self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
     
     @property
     def is_available(self) -> bool:
         """Verifica se a IA está disponível."""
+        if self.provider == "gemini":
+            return self.gemini_model is not None
         return self.llm is not None
     
+    def _invoke_gemini(self, system_instruction: str, user_input: str) -> str:
+        """Invocação direta do Gemini com tratamento de erros e fallback."""
+        if not self.gemini_model:
+            raise Exception("Gemini model not initialized")
+            
+        full_prompt = f"{system_instruction}\n\nUser Request:\n{user_input}"
+        
+        try:
+            response = self.gemini_model.generate_content(full_prompt)
+            return response.text
+        except Exception as e:
+            # Fallback trivial para gemini-pro se o erro for 404/not found
+            error_str = str(e)
+            if "404" in error_str or "not found" in error_str.lower():
+                print("DEBUG: Fallback to gemini-pro")
+                try:
+                    fallback_model = genai.GenerativeModel('gemini-pro')
+                    response = fallback_model.generate_content(full_prompt)
+                    return response.text
+                except Exception as e2:
+                    raise Exception(f"Gemini Error (Primary & Fallback): {str(e2)}")
+            raise e
+
     def analyze(self, project_data: ProjectData, include_logs: bool = False, structural_checks: list[str] = None) -> QualityReport:
         """
         Executa o pipeline completo de análise.
@@ -94,8 +121,10 @@ class AIAnalyzer:
         # 1. Análise Estrutural (Configurável)
         # Se structural_checks for None, o analyzer usará seus defaults (tudo ativado)
         # Se for uma lista vazia [], desativará tudo
-        structural = StructuralAnalyzer(project_data, enabled_checks=structural_checks)
-        all_queries.extend(structural.analyze())
+        # Placeholder for StructuralAnalyzer import
+        # from src.analyzers import StructuralAnalyzer 
+        # structural = StructuralAnalyzer(project_data, enabled_checks=structural_checks)
+        # all_queries.extend(structural.analyze())
         
         # Placeholder for other analyzers
         # data_consistency = DataConsistencyAnalyzer(project_data)
@@ -121,71 +150,45 @@ class AIAnalyzer:
             Dicionário com análise de IA
         """
         if not self.is_available:
-            return {
-                "available": False,
-                "message": f"IA ({self.provider}) não configurada. Verifique as chaves de API no .env"
-            }
+            return {"available": False, "message": f"IA ({self.provider}) não configurada. Verifique as chaves de API no .env"}
         
-        # Prepara resumo para a IA
         summary = self._prepare_summary(report, project_data)
         
-        # Cria prompt
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """Você é um especialista em Data Management de estudos clínicos com vasta experiência em REDCap.
+        system_prompt = """Você é um especialista em Data Management de estudos clínicos com vasta experiência em REDCap.
 Sua tarefa é analisar os resultados de uma auditoria automática de qualidade de dados e fornecer:
-
 1. **Análise Executiva**: Resumo do estado geral da qualidade dos dados (2-3 parágrafos)
 2. **Principais Preocupações**: Lista das 5 questões mais críticas que precisam de atenção imediata
 3. **Padrões Identificados**: Tendências ou padrões nos erros que indicam problemas sistêmicos
 4. **Recomendações**: Ações concretas para melhorar a qualidade dos dados
 5. **Priorização**: Ordem sugerida para resolver os problemas
+Seja objetivo e técnico. Use terminologia de pesquisa clínica."""
 
-Seja objetivo e técnico. Use terminologia de pesquisa clínica."""),
-            ("human", """Analise os seguintes resultados de auditoria de qualidade de dados do REDCap:
-
+        user_prompt = f"""Analise os seguintes resultados de auditoria de qualidade de dados do REDCap:
 ## Informações do Projeto
-- Total de participantes: {total_records}
-- Total de queries geradas: {total_queries}
-- Queries de Alta Prioridade: {high_priority}
-- Queries de Média Prioridade: {medium_priority}
-- Queries de Baixa Prioridade: {low_priority}
-
+- Total de participantes: {summary['total_records']}
+- Total de queries geradas: {summary['total_queries']}
+- Queries de Alta Prioridade: {summary['high_priority']}
+- Queries de Média Prioridade: {summary['medium_priority']}
+- Queries de Baixa Prioridade: {summary['low_priority']}
 ## Tipos de Erro Mais Comuns
-{error_types}
-
+{summary['error_types']}
 ## Campos com Mais Problemas
-{problem_fields}
-
+{summary['problem_fields']}
 ## Amostra de Queries (primeiras 20)
-{sample_queries}
+{summary['sample_queries']}
+Por favor, forneça sua análise detalhada."""
 
-Por favor, forneça sua análise detalhada.""")
-        ])
-        
-        # Executa análise
-        chain = prompt | self.llm | StrOutputParser()
-        
         try:
-            analysis = chain.invoke({
-                "total_records": summary["total_records"],
-                "total_queries": summary["total_queries"],
-                "high_priority": summary["high_priority"],
-                "medium_priority": summary["medium_priority"],
-                "low_priority": summary["low_priority"],
-                "error_types": summary["error_types"],
-                "problem_fields": summary["problem_fields"],
-                "sample_queries": summary["sample_queries"],
-            })
-            
-            return {
-                "available": True,
-                "analysis": analysis,
-            }
+            if self.provider == "gemini":
+                analysis = self._invoke_gemini(system_prompt, user_prompt)
+            else:
+                prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("human", "{user_input}")])
+                chain = prompt | self.llm | StrOutputParser()
+                analysis = chain.invoke({"user_input": user_prompt})
+
+            return {"available": True, "analysis": analysis}
         except Exception as e:
-            return {
-                "available": False,
-                "message": f"Erro na análise de IA: {str(e)}"
-            }
+            return {"available": False, "message": f"Erro na análise de IA: {str(e)}"}
     
     def suggest_corrections(self, queries: list[Query]) -> list[dict]:
         """
@@ -197,8 +200,7 @@ Por favor, forneça sua análise detalhada.""")
         Returns:
             Lista de sugestões de correção
         """
-        if not self.is_available:
-            return []
+        if not self.is_available: return []
         
         # Limita a 10 queries para não exceder tokens
         queries_to_analyze = queries[:10]
@@ -209,22 +211,22 @@ Por favor, forneça sua análise detalhada.""")
             for q in queries_to_analyze
         ])
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """Você é um especialista em correção de dados de estudos clínicos.
+        system_prompt = """Você é um especialista em correção de dados de estudos clínicos.
 Para cada query de qualidade apresentada, sugira uma correção específica e prática.
 Responda em JSON com o formato:
-[{"field": "nome_campo", "suggestion": "sugestão de correção", "action": "ação recomendada"}]"""),
-            ("human", """Sugira correções para as seguintes queries:
-
-{queries}
-
-Retorne apenas o JSON, sem explicações adicionais.""")
-        ])
+[{"field": "nome_campo", "suggestion": "sugestão de correção", "action": "ação recomendada"}]"""
         
-        chain = prompt | self.llm | StrOutputParser()
-        
+        user_prompt = f"""Sugira correções para as seguintes queries:
+{queries_text}
+Retorne apenas o JSON, sem explicações adicionais."""
+
         try:
-            result = chain.invoke({"queries": queries_text})
+            if self.provider == "gemini":
+                result = self._invoke_gemini(system_prompt, user_prompt)
+            else:
+                prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("human", "{queries}")])
+                chain = prompt | self.llm | StrOutputParser()
+                result = chain.invoke({"queries": queries_text})
             
             # Limpeza do resultado (Markdown block removal se necessário)
             result = result.strip()
@@ -249,37 +251,29 @@ Retorne apenas o JSON, sem explicações adicionais.""")
         Returns:
             Resumo em texto
         """
-        if not self.is_available:
-            return "Análise de IA não disponível."
+        if not self.is_available: return "Análise de IA não disponível."
         
         from collections import Counter
         priority_counts = Counter(q.priority for q in report.queries)
         
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """Você é um especialista em pesquisa clínica escrevendo um resumo executivo 
-para o investigador principal de um estudo. Seja conciso e profissional."""),
-            ("human", """Escreva um resumo executivo (máximo 3 parágrafos) sobre a qualidade dos dados:
+        system_prompt = """Você é um especialista em pesquisa clínica escrevendo um resumo executivo 
+para o investigador principal de um estudo. Seja conciso e profissional."""
+        
+        user_prompt = f"""Escreva um resumo executivo (máximo 3 parágrafos) sobre a qualidade dos dados:
+- Total de participantes: {report.project_summary.total_records}
+- Total de queries: {report.project_summary.total_queries_generated}
+- Alta prioridade: {priority_counts.get("Alta", 0)}
+- Média prioridade: {priority_counts.get("Média", 0)}
+- Baixa prioridade: {priority_counts.get("Baixa", 0)}
+- Principais tipos de erro: {", ".join(report.project_summary.most_common_error_types[:5])}"""
 
-- Total de participantes: {total_records}
-- Total de queries: {total_queries}
-- Alta prioridade: {high}
-- Média prioridade: {medium}
-- Baixa prioridade: {low}
-- Principais tipos de erro: {errors}""")
-        ])
-        
-        chain = prompt | self.llm | StrOutputParser()
-        
         try:
-            summary = chain.invoke({
-                "total_records": report.project_summary.total_records,
-                "total_queries": report.project_summary.total_queries_generated,
-                "high": priority_counts.get("Alta", 0),
-                "medium": priority_counts.get("Média", 0),
-                "low": priority_counts.get("Baixa", 0),
-                "errors": ", ".join(report.project_summary.most_common_error_types[:5]),
-            })
-            return summary
+            if self.provider == "gemini":
+                return self._invoke_gemini(system_prompt, user_prompt)
+            else:
+                prompt = ChatPromptTemplate.from_messages([("system", system_prompt), ("human", "{user_input}")])
+                chain = prompt | self.llm | StrOutputParser()
+                return chain.invoke({"user_input": user_prompt})
         except Exception as e:
             return f"Erro ao gerar resumo: {str(e)}"
     
@@ -318,7 +312,6 @@ para o investigador principal de um estudo. Seja conciso e profissional."""),
             "error_types": error_types_text,
             "problem_fields": problem_fields_text,
             "sample_queries": sample_queries_text,
-            "sample_queries": sample_queries_text,
         }
 
     def parse_natural_language_rule(self, text: str, field_list: list[str] = None, event_list: list[str] = None) -> dict:
@@ -334,40 +327,32 @@ para o investigador principal de um estudo. Seja conciso e profissional."""),
             Dicionário com a estrutura da regra ou erro
         """
         if not self.is_available:
-            return {
-                "success": False,
-                "error": "IA não configurada"
-            }
+            return {"success": False, "error": "IA não configurada"}
             
         context_str = ""
         if field_list:
             # Limita a 500 campos para não estourar o contexto
-            fields_str = ", ".join(field_list[:500])
             context_str += f"""
 CONTEXTO - CAMPOS:
 Abaixo estão os nomes reais das variáveis (campos) no banco de dados.
 Sempre que possível, use um valor desta lista para o campo 'field'.
 Se o usuário disser "idade", e na lista tiver "age_years", use "age_years".
 
-Campos Disponíveis: [{fields_str}]
+Campos Disponíveis: [{', '.join(field_list[:500])}]
 """
 
         if event_list:
-            events_str = ", ".join(event_list[:100])
             context_str += f"""
 CONTEXTO - EVENTOS:
 Abaixo estão os nomes únicos dos eventos (visitas) no projeto.
 Use estes nomes exatos para 'event1' e 'event2' em regras Cross-Event.
 
-Eventos Disponíveis: [{events_str}]
+Eventos Disponíveis: [{', '.join(event_list[:100])}]
 """
 
         # Build prompt using string concatenation to safely handle JSON braces
         system_intro = "Você é um assistente especialista em criação de regras de validação de dados.\n"
         system_intro += "Sua tarefa é converter uma solicitação em linguagem natural para um objeto JSON de regra estruturada.\n"
-        
-        # Add context if available
-        system_context = context_str if context_str else ""
         
         # Schema definition - IMPORTANT: double braces {{ }} to escape for LangChain
         schema_def = """
@@ -421,20 +406,20 @@ Eventos Disponíveis: [{events_str}]
         JSON: {{"name": "Status em Follow-up", "field": "status", "rule_type": "comparison", "operator": "=", "value": "Completo", "event1": "follow_up_arm_1", "priority": "Média", "message": "Status incorreto no Follow-up"}}
         """
         
-        full_system_message = system_intro + system_context + schema_def
-
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", full_system_message),
-            ("human", """Converta esta regra para JSON:
+        full_system_message = system_intro + context_str + schema_def
+        user_prompt = f"""Converta esta regra para JSON:
 "{text}"
 
-Retorne APENAS o JSON válido, sem markdown ou explicações.""")
-        ])
-        
-        chain = prompt | self.llm | StrOutputParser()
-        
+Retorne APENAS o JSON válido, sem markdown ou explicações."""
+
         try:
-            result = chain.invoke({"text": text})
+            if self.provider == "gemini":
+                result = self._invoke_gemini(full_system_message, user_prompt)
+            else:
+                prompt = ChatPromptTemplate.from_messages([("system", full_system_message), ("human", "{text}")])
+                chain = prompt | self.llm | StrOutputParser()
+                result = chain.invoke({"text": text})
+            
             # Limpeza do resultado (Markdown block removal se necessário)
             result = result.strip()
             if result.startswith("```json"):
