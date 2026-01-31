@@ -109,37 +109,69 @@ class AIAnalyzer:
         return self.llm is not None
     
     def _invoke_gemini(self, system_instruction: str, user_input: str) -> str:
-        """Invocação direta do Gemini com estratégia de Fallback de Modelos."""
+        """
+        Invocação direta do Gemini via REST API (requests).
+        Isso elimina a dependência da biblioteca google-generativeai que estava causando conflito no Render.
+        """
+        import requests
         
-        # Lista de modelos para tentar em ordem
-        # Tenta 1.5 Pro primeiro (pedido do usuário por "mais novo" e robusto), depois 1.5 Flash, depois Pro 1.0
-        candidate_models = [
-            'gemini-1.5-pro',
-            'gemini-2.0-flash-exp', # Se disponível
-            'gemini-1.5-flash',
-            'gemini-pro'
-        ]
-
-        full_prompt = f"{system_instruction}\n\nUser Request:\n{user_input}"
+        api_key = config.GOOGLE_API_KEY
+        if not api_key:
+            raise Exception("Google API Key not found in .env")
+            
+        # Tenta modelos em ordem de preferência (do mais rápido/barato para o mais capaz)
+        # O 1.5 Flash é gratuito e muito rápido.
+        models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
         
         last_error = None
         
-        for model_name in candidate_models:
+        for model in models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": f"{system_instruction}\n\nUser Request:\n{user_input}"}
+                    ]
+                }],
+                "generationConfig": {
+                    "temperature": 0.3,
+                    "maxOutputTokens": 8192
+                }
+            }
+            
             try:
-                # Instancia o modelo sob demanda para garantir a tentativa correta
-                model = genai.GenerativeModel(model_name)
-                response = model.generate_content(full_prompt)
-                return response.text
+                response = requests.post(url, headers=headers, json=payload, timeout=30)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    # Extração segura da resposta
+                    try:
+                        return data["candidates"][0]["content"]["parts"][0]["text"]
+                    except (KeyError, IndexError):
+                        raise Exception(f"Invalid response format from Gemini ({model}): {str(data)}")
+                else:
+                    # Se for 404, tenta o próximo modelo. Se for outro erro, registra.
+                    error_msg = response.text
+                    print(f"DEBUG: Gemini REST ({model}) failed: {response.status_code} - {error_msg}")
+                    last_error = f"{response.status_code} - {error_msg}"
+                    
+                    if response.status_code == 404:
+                        continue # Tenta próximo modelo
+                    else:
+                        # Erros de permissão/quota (400, 429) geralmente não adiantam trocar de modelo, mas vamos tentar
+                        continue
+
             except Exception as e:
-                error_str = str(e)
-                # Se for erro de "Not Found" ou API version, tenta o próximo.
-                # Se for outro erro (ex: quota), talvez devesse parar, mas fallback ajuda.
-                print(f"DEBUG: Failed with {model_name}: {error_str}")
-                last_error = e
+                print(f"DEBUG: Request failed ({model}): {str(e)}")
+                last_error = str(e)
                 continue
                 
-        # Se chegou aqui, todos falharam
-        raise Exception(f"All Gemini models failed. Last error: {str(last_error)}")
+        raise Exception(f"All Gemini models failed. Last error: {last_error}")
 
     def analyze(self, project_data: ProjectData, include_logs: bool = False, structural_checks: list[str] = None) -> QualityReport:
         """
