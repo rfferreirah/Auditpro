@@ -29,18 +29,25 @@ class DBManager:
             return new_client
         return self.client
 
-    def save_project(self, user_id, project_title, api_url, redcap_project_id=None, is_longitudinal=False, token=None):
+    def save_project(self, user_id, project_title, api_url, redcap_project_id=None, is_longitudinal=False, token=None, total_records=None):
         """
         Saves or updates a project for the user.
-        Checks if a project with the same API URL already exists for this user.
+        Uses redcap_project_id as the unique key to prevent duplicates.
         """
         client = self.get_client(token)
         if not client:
             return None
 
         try:
-            # Check if exists
-            response = client.table('projects').select('id').eq('user_id', user_id).eq('api_url', api_url).execute()
+            # Check if exists using redcap_project_id (unique per REDCap instance)
+            # This prevents duplicates when the same project is analyzed multiple times
+            response = None
+            if redcap_project_id:
+                response = client.table('projects').select('id').eq('user_id', user_id).eq('redcap_project_id', redcap_project_id).execute()
+            
+            # Fallback to api_url check if no redcap_project_id
+            if not response or not response.data:
+                response = client.table('projects').select('id').eq('user_id', user_id).eq('api_url', api_url).execute()
             
             data = {
                 'user_id': user_id,
@@ -50,14 +57,18 @@ class DBManager:
                 'is_longitudinal': is_longitudinal,
                 'updated_at': datetime.now().isoformat()
             }
+            
+            # Add total_records if provided
+            if total_records is not None:
+                data['total_records'] = total_records
 
             if response.data:
-                # Update
+                # Update existing project
                 project_id = response.data[0]['id']
                 client.table('projects').update(data).eq('id', project_id).execute()
                 return project_id
             else:
-                # Insert
+                # Insert new project
                 response = client.table('projects').insert(data).execute()
                 if response.data:
                     return response.data[0]['id']

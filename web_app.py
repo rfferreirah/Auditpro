@@ -643,7 +643,8 @@ def analyze():
                     api_url=api_url,
                     redcap_project_id=project_info.get('project_id'),
                     is_longitudinal=project_info.get('is_longitudinal', False),
-                    token=token
+                    token=token,
+                    total_records=report.project_summary.total_records
                 )
             except Exception as db_err:
                 print(f"[WARN] Erro ao salvar projeto no analyze: {db_err}", flush=True)
@@ -777,6 +778,19 @@ def download_pdf():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"quality_report_{timestamp}.pdf"
         
+        # Log audit event for PDF download
+        db.log_audit_event(
+            user_id=user_id,
+            action='download_pdf',
+            entity_type='report',
+            entity_id=ctx.get('project_id'),
+            details={
+                'filename': filename,
+                'project_name': ctx['project_name'],
+                'total_queries': len(ctx.get('queries', []))
+            }
+        )
+        
         return Response(
             pdf_bytes,
             mimetype='application/pdf',
@@ -810,6 +824,19 @@ def download_json():
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"quality_report_{timestamp}.json"
+        
+        # Log audit event for JSON download
+        db.log_audit_event(
+            user_id=user_id,
+            action='download_json',
+            entity_type='report',
+            entity_id=ctx.get('project_id'),
+            details={
+                'filename': filename,
+                'project_name': ctx['project_name'],
+                'total_queries': len(ctx.get('queries', []))
+            }
+        )
         
         return Response(
             json_data,
@@ -883,6 +910,19 @@ def download_csv():
         
         # Add BOM for Excel compatibility with UTF-8
         bom_output = '\ufeff' + output
+        
+        # Log audit event for CSV download
+        db.log_audit_event(
+            user_id=user_id,
+            action='download_csv',
+            entity_type='report',
+            entity_id=ctx.get('project_id'),
+            details={
+                'filename': filename,
+                'project_name': ctx['project_name'],
+                'total_queries': len(queries)
+            }
+        )
         
         return Response(
             bom_output,
