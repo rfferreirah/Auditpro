@@ -10,98 +10,97 @@
         rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: var(--bg-body);
-            /* Ensure background is set */
-        }
+    body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--bg-body);
+    /* Ensure background is set */
+    }
 
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            padding: 2.5rem;
-            /* More breathing room */
-        }
+    .login-card {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    padding: 2.5rem;
+    /* More breathing room */
+    }
 
-        .logo-container {
-            margin-bottom: 2.5rem;
-        }
+    .logo-container {
+    margin-bottom: 2.5rem;
+    }
 
-        .logo-title {
-            font-size: 2.2rem;
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
+    .logo-title {
+    font-size: 2.2rem;
+    font-family: 'Montserrat', sans-serif;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    }
 
-        /* Input with Icon Wrapper */
-        .input-wrapper {
-            position: relative;
-        }
+    /* Input with Icon Wrapper */
+    .input-wrapper {
+    position: relative;
+    }
 
-        .input-wrapper i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            pointer-events: none;
-            transition: color 0.2s;
-        }
+    .input-wrapper i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    pointer-events: none;
+    transition: color 0.2s;
+    }
 
-        .input-wrapper input {
-            padding-left: 3rem;
-            /* Space for icon */
-        }
+    .input-wrapper input {
+    padding-left: 3rem;
+    /* Space for icon */
+    }
 
-        .input-wrapper input:focus+i {
-            color: var(--primary);
-        }
+    .input-wrapper input:focus+i {
+    color: var(--primary);
+    }
 
-        /* Footer links */
-        .login-footer {
-            margin-top: 2rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1.5rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
+    /* Footer links */
+    .login-footer {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    }
 
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            left: auto;
-            /* Reset left positioning inheritance */
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 1.2rem;
-            z-index: 2;
-        }
+    .password-toggle {
+    position: absolute;
+    right: 1rem;
+    left: auto;
+    /* Reset left positioning inheritance */
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 2;
+    }
 
-        .password-toggle:hover {
-            color: var(--primary);
-        }
+    .password-toggle:hover {
+    color: var(--primary);
+    }
 
-        .input-wrapper .password-toggle {
-            position: absolute;
-            right: 1rem;
-            left: auto;
-            /* Override generic icon positioning */
-            pointer-events: auto;
-            z-index: 10;
-        }
+    .input-wrapper .password-toggle {
+    position: absolute;
+    right: 1rem;
+    left: auto;
+    /* Override generic icon positioning */
+    pointer-events: auto;
+    z-index: 10;
+    }
     </style>
 </head>
 
