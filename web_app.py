@@ -952,9 +952,11 @@ def get_rules():
         user_id = session.get('user_id')
         token = session.get('access_token')
         rules = rules_manager.load_rules(user_id, token)
+        # Filtra regras de sistema - elas não devem aparecer no painel de "Regras Customizadas"
+        custom_rules = [r for r in rules if r.rule_type != 'system']
         return jsonify({
             'success': True,
-            'rules': [r.to_dict() for r in rules]
+            'rules': [r.to_dict() for r in custom_rules]
         })
     except Exception as e:
         # Retry logic for JWT Expiration
@@ -967,9 +969,10 @@ def get_rules():
                         # Retry with new token
                         new_token = res['access_token']
                         rules = rules_manager.load_rules(user_id, new_token)
+                        custom_rules = [r for r in rules if r.rule_type != 'system']
                         return jsonify({
                             'success': True,
-                            'rules': [r.to_dict() for r in rules]
+                            'rules': [r.to_dict() for r in custom_rules]
                         })
                     except Exception as retry_e:
                         print(f"Erro ao retentar carregar regras: {retry_e}")
