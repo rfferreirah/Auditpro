@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuditPRO - Dossiê de Modelos de Negócio</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: #334155;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .document {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .cover {
+            background: linear-gradient(135deg, var(--dark) 0%, #0f172a 100%);
+            color: white;
+            padding: 4rem 3rem;
+            text-align: center;
+        }
+
+        .cover h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .cover .meta {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-success {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--accent);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .content {
+            padding: 3rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        h3 {
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        h4 {
+            color: #64748b;
+            font-size: 1rem;
+            margin: 1rem 0 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .card-price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+
+        ul,
+        ol {
+            margin: 1rem 0 1rem 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: var(--dark);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
+        }
+
+        .persona-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .persona-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .persona-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.3rem;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .roi-calculator {
+            background: linear-gradient(135deg, var(--dark) 0%, #0f172a 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .roi-stat {
+            padding: 1rem;
+        }
+
+        .roi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+
+        .roi-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .feature-table {
+            margin: 2rem 0;
+        }
+
+        .feature-table td:first-child {
+            font-weight: 500;
+        }
+
+        .check {
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #cbd5e1;
+        }
+
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 2rem 3rem;
+            text-align: center;
+        }
+
+        .footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .document {
+                box-shadow: none;
+            }
+
+            .card:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="document">
+            <!-- Capa -->
+            <div class="cover">
+                <h1>🔍 AuditPRO</h1>
+                <p class="subtitle">Dossiê Estratégico de Modelos de Negócio</p>
+                <p>Plataforma SaaS de Qualidade de Dados para Pesquisa Clínica</p>
+                <p class="meta" style="margin-top: 2rem;">
+                    <span class="badge badge-primary">Confidencial</span>
+                    <span class="badge badge-success">Versão 1.0</span>
+                </p>
+                <p class="meta" style="margin-top: 1rem;">Fevereiro 2026</p>
+            </div>
+
+            <div class="content">
+                <!-- Sumário Executivo -->
+                <section>
+                    <h2>📋 Sumário Executivo</h2>
+                    <div class="highlight-box">
+                        <strong>O Problema:</strong> Pesquisadores clínicos gastam até <strong>40% do tempo</strong> em
+                        tarefas manuais de verificação de qualidade de dados, resultando em atrasos, custos elevados e
+                        potenciais falhas regulatórias.
+                    </div>
+                    <p><strong>AuditPRO</strong> é uma plataforma SaaS que automatiza a análise de qualidade de dados em
+                        projetos REDCap, oferecendo:</p>
+                    <ul>
+                        <li>✅ Detecção automática de inconsistências em segundos</li>
+                        <li>✅ Regras customizadas com geração por IA</li>
+                        <li>✅ Relatórios profissionais exportáveis</li>
+                        <li>✅ Links diretos para correção no REDCap</li>
+                    </ul>
+                </section>
+
+                <!-- Análise de Mercado -->
+                <section>
+                    <h2>📊 Análise de Mercado</h2>
+
+                    <h3>Tamanho do Mercado</h3>
+                    <div class="roi-calculator">
+                        <h4 style="color: #60a5fa; margin-bottom: 1rem;">Mercado REDCap Global</h4>
+                        <div class="roi-grid">
+                            <div class="roi-stat">
+                                <div class="roi-value">6.000+</div>
+                                <div class="roi-label">Instituições Usuárias</div>
+                            </div>
+                            <div class="roi-stat">
+                                <div class="roi-value">2.5M+</div>
+                                <div class="roi-label">Projetos Ativos</div>
+                            </div>
+                            <div class="roi-stat">
+                                <div class="roi-value">$850M</div>
+                                <div class="roi-label">Mercado Data Quality (2026)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Segmentos Prioritários</h3>
+                    <table>
+                        <tr>
+                            <th>Segmento</th>
+                            <th>Tamanho</th>
+                            <th>Ticket Médio</th>
+                            <th>Urgência</th>
+                        </tr>
+                        <tr>
+                            <td>Universidades/Centros de Pesquisa</td>
+                            <td>~3.000 instituições</td>
+                            <td>R$ 500-2.000/mês</td>
+                            <td><span class="badge badge-danger">Alta</span></td>
+                        </tr>
+                        <tr>
+                            <td>Hospitais com Pesquisa Clínica</td>
+                            <td>~1.500 no Brasil</td>
+                            <td>R$ 1.000-5.000/mês</td>
+                            <td><span class="badge badge-danger">Alta</span></td>
+                        </tr>
+                        <tr>
+                            <td>CROs (Contract Research Orgs)</td>
+                            <td>~200 no Brasil</td>
+                            <td>R$ 2.000-10.000/mês</td>
+                            <td><span class="badge badge-warning">Média</span></td>
+                        </tr>
+                        <tr>
+                            <td>Pharma/Biotech</td>
+                            <td>~100 operando no Brasil</td>
+                            <td>R$ 5.000-50.000/mês</td>
+                            <td><span class="badge badge-primary">Enterprise</span></td>
+                        </tr>
+                    </table>
+                </section>
+
+                <!-- Públicos-Alvo -->
+                <section>
+                    <h2>👥 Públicos-Alvo (Personas)</h2>
+
+                    <div class="persona-card">
+                        <div class="persona-header">
+                            <div class="persona-avatar">👩‍🔬</div>
+                            <div>
+                                <strong>Dra. Marina - Coordenadora de Pesquisa</strong>
+                                <p style="margin: 0; color: #64748b;">Universidade Federal, 42 anos</p>
+                            </div>
+                        </div>
+                        <p><strong>Dores:</strong> Gerencia 5 projetos REDCap simultaneamente. Passa 2 dias/semana
+                            revisando dados manualmente. Já teve artigo rejeitado por inconsistências não detectadas.
+                        </p>
+                        <p><strong>Necessidade:</strong> Ferramenta que automatize verificações e gere relatórios para
+                            auditoria.</p>
+                        <p><strong>Orçamento:</strong> R$ 200-500/mês (verba de projeto)</p>
+                        <p><strong>Gatilho de Compra:</strong> Publicação rejeitada ou auditoria da ANVISA iminente.</p>
+                    </div>
+
+                    <div class="persona-card">
+                        <div class="persona-header">
+                            <div class="persona-avatar">👨‍💼</div>
+                            <div>
+                                <strong>Carlos - Diretor de Data Management (CRO)</strong>
+                                <p style="margin: 0; color: #64748b;">CRO Multinacional, 38 anos</p>
+                            </div>
+                        </div>
+                        <p><strong>Dores:</strong> Equipe limitada para número crescente de estudos. Clientes exigem
+                            relatórios de qualidade. Pressão por redução de custos.</p>
+                        <p><strong>Necessidade:</strong> Solução escalável que processe múltiplos projetos com
+                            dashboards para clientes.</p>
+                        <p><strong>Orçamento:</strong> R$ 2.000-10.000/mês</p>
+                        <p><strong>Gatilho de Compra:</strong> Novo contrato grande ou falha em auditoria do sponsor.
+                        </p>
+                    </div>
+
+                    <div class="persona-card">
+                        <div class="persona-header">
+                            <div class="persona-avatar">👩‍⚕️</div>
+                            <div>
+                                <strong>Ana - Gerente de Qualidade (Hospital)</strong>
+                                <p style="margin: 0; color: #64748b;">Hospital Universitário, 35 anos</p>
+                            </div>
+                        </div>
+                        <p><strong>Dores:</strong> Precisa garantir compliance com GCP/ANVISA. Não tem equipe de TI
+                            dedicada. Auditorias frequentes.</p>
+                        <p><strong>Necessidade:</strong> Sistema simples, sem instalação, com trilha de auditoria
+                            completa.</p>
+                        <p><strong>Orçamento:</strong> R$ 500-2.000/mês</p>
+                        <p><strong>Gatilho de Compra:</strong> Notificação de auditoria ou não-conformidade detectada.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Modelos de Monetização -->
+                <section>
+                    <h2>💰 Modelos de Monetização</h2>
+
+                    <h3>Modelo 1: SaaS por Assinatura (Recomendado)</h3>
+                    <div class="card-grid">
+                        <div class="card">
+                            <span class="badge badge-primary">Starter</span>
+                            <div class="card-title">Pesquisador Individual</div>
+                            <div class="card-price">R$ 97<span>/mês</span></div>
+                            <ul style="font-size: 0.9rem;">
+                                <li>1 projeto REDCap</li>
+                                <li>Até 1.000 registros</li>
+                                <li>5 regras customizadas</li>
+                                <li>Relatórios PDF/CSV</li>
+                                <li>Suporte por email</li>
+                            </ul>
+                        </div>
+
+                        <div class="card" style="border: 2px solid var(--primary);">
+                            <span class="badge badge-success">Popular</span>
+                            <div class="card-title">Equipe de Pesquisa</div>
+                            <div class="card-price">R$ 297<span>/mês</span></div>
+                            <ul style="font-size: 0.9rem;">
+                                <li>5 projetos REDCap</li>
+                                <li>Até 10.000 registros</li>
+                                <li>Regras ilimitadas</li>
+                                <li><strong>Gerador de regras por IA</strong></li>
+                                <li>3 usuários inclusos</li>
+                                <li>Suporte prioritário</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <span class="badge badge-warning">Enterprise</span>
+                            <div class="card-title">Institucional</div>
+                            <div class="card-price">R$ 997<span>/mês</span></div>
+                            <ul style="font-size: 0.9rem;">
+                                <li>Projetos ilimitados</li>
+                                <li>Registros ilimitados</li>
+                                <li>Usuários ilimitados</li>
+                                <li><strong>API de integração</strong></li>
+                                <li><strong>SSO / LDAP</strong></li>
+                                <li>SLA 99.9%</li>
+                                <li>Onboarding dedicado</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>Modelo 2: Pay-per-Analysis</h3>
+                    <p>Para usuários ocasionais que não querem assinatura:</p>
+                    <table>
+                        <tr>
+                            <th>Pacote</th>
+                            <th>Análises</th>
+                            <th>Preço</th>
+                            <th>Por Análise</th>
+                        </tr>
+                        <tr>
+                            <td>Básico</td>
+                            <td>5 análises</td>
+                            <td>R$ 99</td>
+                            <td>R$ 19,80</td>
+                        </tr>
+                        <tr>
+                            <td>Profissional</td>
+                            <td>20 análises</td>
+                            <td>R$ 299</td>
+                            <td>R$ 14,95</td>
+                        </tr>
+                        <tr>
+                            <td>Volume</td>
+                            <td>100 análises</td>
+                            <td>R$ 999</td>
+                            <td>R$ 9,99</td>
+                        </tr>
+                    </table>
+
+                    <h3>Modelo 3: White-Label para CROs</h3>
+                    <div class="highlight-box">
+                        <strong>Proposta:</strong> CROs podem oferecer o AuditPRO com sua própria marca para clientes.
+                        <br><br>
+                        <strong>Preço:</strong> R$ 5.000-15.000/mês + setup de R$ 10.000
+                        <br>
+                        <strong>Inclui:</strong> Branding customizado, domínio próprio, relatórios personalizados,
+                        suporte técnico dedicado.
+                    </div>
+                </section>
+
+                <!-- Roadmap de Funcionalidades -->
+                <section>
+                    <h2>🚀 Roadmap de Novas Funcionalidades</h2>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">Q1 2026 (Março)</div>
+                            <h4>Dashboard Analítico</h4>
+                            <ul>
+                                <li>📊 Gráficos de tendência de qualidade ao longo do tempo</li>
+                                <li>📈 Score de qualidade por formulário/evento</li>
+                                <li>🎯 Metas de resolução de pendências</li>
+                            </ul>
+                            <p><strong>Benefício:</strong> Gestores visualizam evolução e tomam decisões baseadas em
+                                dados.</p>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Q2 2026 (Junho)</div>
+                            <h4>Automação e Agendamento</h4>
+                            <ul>
+                                <li>⏰ Análises agendadas (diária/semanal)</li>
+                                <li>📧 Alertas por email quando novas pendências surgem</li>
+                                <li>🔔 Notificações push no navegador</li>
+                            </ul>
+                            <p><strong>Benefício:</strong> Detecção proativa de problemas sem intervenção manual.</p>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Q3 2026 (Setembro)</div>
+                            <h4>Colaboração em Equipe</h4>
+                            <ul>
+                                <li>👥 Atribuição de pendências para responsáveis</li>
+                                <li>💬 Comentários e histórico de resolução</li>
+                                <li>📋 Workflow de aprovação</li>
+                            </ul>
+                            <p><strong>Benefício:</strong> Equipes trabalham de forma coordenada com responsabilidades
+                                claras.</p>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">Q4 2026 (Dezembro)</div>
+                            <h4>Integrações Avançadas</h4>
+                            <ul>
+                                <li>🔗 API REST pública para integração com outros sistemas</li>
+                                <li>📊 Exportação para Power BI / Tableau</li>
+                                <li>🏥 Integração com sistemas hospitalares (HL7 FHIR)</li>
+                            </ul>
+                            <p><strong>Benefício:</strong> Interoperabilidade total com ecossistema de TI existente.</p>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-date">2027</div>
+                            <h4>IA Avançada e Compliance</h4>
+                            <ul>
+                                <li>🤖 Sugestões automáticas de correção (AI-powered)</li>
+                                <li>📜 Templates de validação FDA 21 CFR Part 11</li>
+                                <li>🌎 Suporte multi-idioma (EN, ES, FR)</li>
+                                <li>☁️ Deploy on-premise para instituições sensíveis</li>
+                            </ul>
+                            <p><strong>Benefício:</strong> Compliance regulatório e expansão internacional.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Comparativo de Planos -->
+                <section>
+                    <h2>📋 Matriz de Funcionalidades por Plano</h2>
+
+                    <table class="feature-table">
+                        <tr>
+                            <th>Funcionalidade</th>
+                            <th style="text-align: center;">Starter</th>
+                            <th style="text-align: center;">Equipe</th>
+                            <th style="text-align: center;">Enterprise</th>
+                        </tr>
+                        <tr>
+                            <td>Análise de campos obrigatórios</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Validação de ranges e formatos</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Relatório PDF exportável</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Regras customizadas</td>
+                            <td style="text-align: center;">5</td>
+                            <td style="text-align: center;">∞</td>
+                            <td style="text-align: center;">∞</td>
+                        </tr>
+                        <tr>
+                            <td>Gerador de regras por IA</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Cross-Event Validation</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Dashboard analítico</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Agendamento automático</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>API de integração</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>SSO / LDAP</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="cross" style="text-align: center;">—</td>
+                            <td class="check" style="text-align: center;">✓</td>
+                        </tr>
+                        <tr>
+                            <td>Suporte</td>
+                            <td style="text-align: center;">Email</td>
+                            <td style="text-align: center;">Prioritário</td>
+                            <td style="text-align: center;">Dedicado</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <!-- ROI para Clientes -->
+                <section>
+                    <h2>💵 ROI para Clientes</h2>
+
+                    <div class="roi-calculator">
+                        <h4 style="color: #60a5fa;">Economia Projetada por Projeto</h4>
+                        <div class="roi-grid">
+                            <div class="roi-stat">
+                                <div class="roi-value">15h</div>
+                                <div class="roi-label">Horas economizadas/mês</div>
+                            </div>
+                            <div class="roi-stat">
+                                <div class="roi-value">R$ 3.000</div>
+                                <div class="roi-label">Economia mensal (hora pesquisador)</div>
+                            </div>
+                            <div class="roi-stat">
+                                <div class="roi-value">30x</div>
+                                <div class="roi-label">ROI no plano Equipe</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Argumentos de Venda por Persona</h3>
+
+                    <div class="card-grid">
+                        <div class="card">
+                            <div class="card-title">Para Pesquisadores</div>
+                            <p>"Publique mais rápido com dados impecáveis"</p>
+                            <ul style="font-size: 0.9rem;">
+                                <li>Foque na ciência, não em planilhas</li>
+                                <li>Evite rejeição de manuscritos</li>
+                                <li>Impressione revisores com qualidade</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Para CROs</div>
+                            <p>"Escale operações sem escalar equipe"</p>
+                            <ul style="font-size: 0.9rem;">
+                                <li>Atenda mais clientes simultaneamente</li>
+                                <li>Reduza custo de operação em 40%</li>
+                                <li>Relatórios automáticos para sponsors</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Para Hospitais</div>
+                            <p>"Compliance garantido, sem dor de cabeça"</p>
+                            <ul style="font-size: 0.9rem;">
+                                <li>Trilha de auditoria completa</li>
+                                <li>Pronto para inspeção ANVISA</li>
+                                <li>Sem instalação de software</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Estratégia de Go-to-Market -->
+                <section>
+                    <h2>🎯 Estratégia de Go-to-Market</h2>
+
+                    <h3>Fase 1: Validação (Mês 1-3)</h3>
+                    <ul>
+                        <li>✅ Oferecer plano gratuito para 10 beta testers (universidades)</li>
+                        <li>✅ Coletar feedback e casos de uso reais</li>
+                        <li>✅ Desenvolver 3 cases studies detalhados</li>
+                    </ul>
+
+                    <h3>Fase 2: Lançamento (Mês 4-6)</h3>
+                    <ul>
+                        <li>🚀 Campanha de lançamento em LinkedIn (pesquisadores)</li>
+                        <li>📧 Email marketing para lista de usuários REDCap (via parceiros)</li>
+                        <li>🎓 Webinars educativos sobre qualidade de dados</li>
+                        <li>💬 Presença em congressos de pesquisa clínica</li>
+                    </ul>
+
+                    <h3>Fase 3: Escala (Mês 7-12)</h3>
+                    <ul>
+                        <li>🤝 Parcerias com consórcios REDCap regionais</li>
+                        <li>📚 Programa de afiliados (pesquisadores indicam)</li>
+                        <li>🏢 Equipe comercial para Enterprise</li>
+                        <li>🌎 Expansão para LATAM (espanhol)</li>
+                    </ul>
+
+                    <div class="warning-box">
+                        <strong>💡 Quick Win:</strong> Oferecer integração gratuita para os primeiros 50 projetos
+                        longitudinais que se cadastrarem. Isso gera buzz e casos de uso complexos para marketing.
+                    </div>
+                </section>
+
+                <!-- Projeção Financeira -->
+                <section>
+                    <h2>📈 Projeção Financeira (12 meses)</h2>
+
+                    <table>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Mês 3</th>
+                            <th>Mês 6</th>
+                            <th>Mês 12</th>
+                        </tr>
+                        <tr>
+                            <td>Clientes Starter</td>
+                            <td>20</td>
+                            <td>80</td>
+                            <td>200</td>
+                        </tr>
+                        <tr>
+                            <td>Clientes Equipe</td>
+                            <td>5</td>
+                            <td>25</td>
+                            <td>60</td>
+                        </tr>
+                        <tr>
+                            <td>Clientes Enterprise</td>
+                            <td>1</td>
+                            <td>5</td>
+                            <td>15</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MRR (Receita Mensal)</strong></td>
+                            <td><strong>R$ 4.400</strong></td>
+                            <td><strong>R$ 20.200</strong></td>
+                            <td><strong>R$ 52.300</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ARR (Receita Anual)</strong></td>
+                            <td>R$ 52.800</td>
+                            <td>R$ 242.400</td>
+                            <td><strong>R$ 627.600</strong></td>
+                        </tr>
+                    </table>
+
+                    <div class="highlight-box">
+                        <strong>Meta Ano 1:</strong> R$ 600.000 ARR com margem operacional de 70% (SaaS típico).
+                        <br>
+                        <strong>Meta Ano 2:</strong> R$ 2.000.000 ARR com expansão internacional.
+                    </div>
+                </section>
+
+                <!-- Conclusão -->
+                <section>
+                    <h2>✅ Próximos Passos</h2>
+                    <ol>
+                        <li><strong>Definir pricing final</strong> - Validar com 5 potenciais clientes</li>
+                        <li><strong>Implementar sistema de pagamentos</strong> - Stripe ou PagSeguro</li>
+                        <li><strong>Criar landing page de vendas</strong> - Com calculadora de ROI</li>
+                        <li><strong>Preparar onboarding automatizado</strong> - Reduzir fricção</li>
+                        <li><strong>Lançar programa beta</strong> - Primeiros 50 clientes com desconto</li>
+                    </ol>
+
+                    <div class="highlight-box" style="margin-top: 2rem;">
+                        <strong>🎯 Resumo Executivo:</strong>
+                        <br><br>
+                        AuditPRO resolve um problema real e urgente (qualidade de dados em pesquisa clínica) para um
+                        mercado bem definido (usuários REDCap).
+                        Com precificação SaaS escalonada, roadmap claro de funcionalidades futuras e estratégia focada
+                        em nichos específicos,
+                        o caminho para R$ 600K ARR no primeiro ano é viável e escalável.
+                    </div>
+                </section>
+            </div>
+
+            <div class="footer">
+                <p><strong>AuditPRO</strong> - Qualidade de Dados para Pesquisa Clínica</p>
+                <p>Documento Confidencial | Fevereiro 2026</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
