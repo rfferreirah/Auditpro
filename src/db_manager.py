@@ -436,7 +436,7 @@ class DBManager:
             
         try:
             data = {
-                'user_id': user_id,
+                'user_id': user_id, 
                 'action': action,
                 'entity_type': entity_type,
                 'new_values': details or {},
