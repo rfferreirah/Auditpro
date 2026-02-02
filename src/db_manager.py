@@ -430,7 +430,7 @@ class DBManager:
     # ==================== AUDIT LOG ====================
 
     def log_audit_event(self, user_id, action, entity_type, entity_id=None, details=None):
-        """Log user action asynchronously"""
+        """Log user action - runs synchronously to avoid auth issues"""
         if not self.client or not user_id:
             return
             
@@ -439,20 +439,22 @@ class DBManager:
                 'user_id': user_id,
                 'action': action,
                 'entity_type': entity_type,
-                'entity_id': entity_id,
-                'new_values': details or {}, # mapping details to jsonb
+                'new_values': details or {},
                 'created_at': datetime.now().isoformat()
             }
-            # Fire and forget using background thread
-            import threading
-            thread = threading.Thread(target=self._log_audit_worker, args=(data,))
-            thread.daemon = True
-            thread.start()
+            
+            # Only add entity_id if it's a valid UUID
+            if entity_id:
+                data['entity_id'] = entity_id
+            
+            # Run synchronously to ensure auth context is correct
+            self.client.table('audit_log').insert(data).execute()
+            print(f"Audit log saved: {action} by user {user_id}")
         except Exception as e:
-            print(f"Error initiating audit log: {e}")
+            print(f"Error saving audit log: {e}")
 
     def _log_audit_worker(self, data):
-        """Worker thread for audit logging"""
+        """Worker thread for audit logging (deprecated - kept for compatibility)"""
         try:
             self.client.table('audit_log').insert(data).execute()
         except Exception as e:
