@@ -1,6 +1,9 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from supabase import create_client, Client
+
+# Fuso horário de Brasília (UTC-3)
+BRASILIA_TZ = timezone(timedelta(hours=-3))
 
 class DBManager:
     def __init__(self):
@@ -440,7 +443,7 @@ class DBManager:
                 'action': action,
                 'entity_type': entity_type,
                 'new_values': details or {},
-                'created_at': datetime.now().isoformat()
+                'created_at': datetime.now(BRASILIA_TZ).isoformat()
             }
             
             # Only add entity_id if it's a valid UUID
