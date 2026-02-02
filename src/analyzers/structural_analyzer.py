@@ -187,9 +187,41 @@ class StructuralAnalyzer(BaseAnalyzer):
              if not has_data:
                  return # Skip checks if form is incomplete and completely empty
 
+        # SPECIAL HANDLING FOR CHECKBOX FIELDS
+        # REDCap stores checkboxes as multiple columns: field___1, field___2, etc.
+        # A checkbox is considered filled if ANY option is checked (value = "1")
+        if field_meta.field_type == "checkbox":
+            checkbox_has_value = False
+            
+            # Search for all checkbox columns matching this field
+            field_prefix = f"{field_meta.field_name}___"
+            for key in record.keys():
+                if key.startswith(field_prefix):
+                    checkbox_value = record.get(key)
+                    # In REDCap, checked = "1", unchecked = "0" or empty
+                    if checkbox_value is not None and str(checkbox_value).strip() == "1":
+                        checkbox_has_value = True
+                        break
+            
+            if checkbox_has_value:
+                return  # Checkbox has at least one option selected, not empty
+            
+            # If no checkbox options are checked, flag as empty
+            self.add_query(
+                record_id=record_id,
+                event=event,
+                instrument=field_meta.form_name,
+                field=field_meta.field_name,
+                value_found="(nenhuma opção selecionada)",
+                issue_type="required_field_empty",
+                explanation=f"O campo '{field_meta.field_label}' é obrigatório mas nenhuma opção foi selecionada.",
+                priority="Alta",
+                suggested_action="Selecionar pelo menos uma opção.",
+            )
+            return
+
+        # Standard check for non-checkbox fields
         if self.is_empty(value):
-            # DEBUG LOG to diagnose false positives
-            # print(f"DEBUG_EMPTY_CHECK: Flagged '{field_meta.field_name}' for Record {record_id} in {event}. Raw Value='{value}' Type={type(value)}", flush=True)
             self.add_query(
                 record_id=record_id,
                 event=event,
