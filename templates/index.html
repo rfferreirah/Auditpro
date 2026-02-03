@@ -523,6 +523,10 @@
                     <button id="downloadCsv" class="btn btn-secondary">
                         <i class="ph ph-table" style="font-size: 1.2rem;"></i> Download CSV
                     </button>
+                    <button id="downloadAuditLogs" class="btn btn-secondary" style="display: none;"
+                        title="Disponível quando logs de auditoria são incluídos na análise">
+                        <i class="ph ph-clipboard-text" style="font-size: 1.2rem;"></i> Logs de Auditoria
+                    </button>
                 </div>
             </div>
 
@@ -1137,6 +1141,14 @@
             document.getElementById('mediumPriority').textContent = data.summary.medium_priority;
             document.getElementById('lowPriority').textContent = data.summary.low_priority;
 
+            // Mostrar/ocultar botão de logs de auditoria
+            const auditLogsBtn = document.getElementById('downloadAuditLogs');
+            if (data.has_audit_logs) {
+                auditLogsBtn.style.display = 'inline-flex';
+            } else {
+                auditLogsBtn.style.display = 'none';
+            }
+
             // Error list
             const errorList = document.getElementById('errorList');
             errorList.innerHTML = data.summary.most_common_errors
@@ -1202,6 +1214,10 @@
 
         document.getElementById('downloadCsv').addEventListener('click', () => {
             window.location.href = '/api/download/csv';
+        });
+
+        document.getElementById('downloadAuditLogs').addEventListener('click', () => {
+            window.location.href = '/api/download/audit-logs-pdf';
         });
 
         // Show status message

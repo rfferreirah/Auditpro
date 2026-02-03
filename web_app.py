@@ -19,6 +19,7 @@ import config
 from src.redcap_client import REDCapClient, REDCapAPIError
 from src.query_generator import QueryGenerator
 from src.pdf_generator import PDFReportGenerator
+from src.audit_logs_pdf_generator import AuditLogsPDFGenerator
 from src.models import QualityReport
 from src.ai_analyzer import AIAnalyzer
 from src.auth_manager import auth_manager, login_required
@@ -38,7 +39,8 @@ def get_analysis_context(user_id):
         return None
     return analysis_cache.get(user_id, {
         "report": None, "project_name": None, "queries": [], 
-        "client": None, "project_id": None, "field_labels": {}, "field_names": []
+        "client": None, "project_id": None, "field_labels": {}, "field_names": [],
+        "audit_logs": []
     })
 
 def update_analysis_context(user_id, data):
@@ -621,6 +623,13 @@ def analyze():
             ctx_update['field_names'] = []
             ctx_update['field_labels'] = {}
         
+        # Armazena logs de auditoria no contexto (se incluídos)
+        try:
+            ctx_update['audit_logs'] = [log.model_dump() for log in project_data.logs] if project_data.logs else []
+        except:
+            ctx_update['audit_logs'] = []
+
+        
         # Contagem por prioridade
         from collections import Counter
         priority_counts = Counter(q.priority for q in queries)
@@ -701,6 +710,7 @@ def analyze():
             'page': 1,
             'page_size': page_size,
             'total_pages': (len(queries) + page_size - 1) // page_size,
+            'has_audit_logs': len(ctx_update.get('audit_logs', [])) > 0,
         })
         
     except REDCapAPIError as e:
@@ -802,6 +812,55 @@ def download_pdf():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/download/audit-logs-pdf')
+def download_audit_logs_pdf():
+    """Download dos logs de auditoria em PDF."""
+    user_id = session.get('user_id')
+    ctx = get_analysis_context(user_id)
+    
+    if not ctx:
+        return jsonify({'error': 'Nenhuma análise disponível'}), 400
+    
+    audit_logs = ctx.get('audit_logs', [])
+    
+    if not audit_logs:
+        return jsonify({'error': 'Nenhum log de auditoria encontrado. Execute a análise com a opção "Incluir logs de auditoria" marcada.'}), 400
+    
+    try:
+        pdf_gen = AuditLogsPDFGenerator(
+            logs=audit_logs,
+            project_name=ctx.get('project_name') or 'Projeto REDCap',
+            user_name=session.get('user_name', 'Usuário AuditPRO')
+        )
+        pdf_bytes = pdf_gen.generate_bytes()
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"audit_logs_{timestamp}.pdf"
+        
+        # Log audit event for PDF download
+        db.log_audit_event(
+            user_id=user_id,
+            action='download_audit_logs_pdf',
+            entity_type='audit_logs',
+            entity_id=ctx.get('project_id'),
+            details={
+                'filename': filename,
+                'project_name': ctx.get('project_name'),
+                'total_logs': len(audit_logs)
+            }
+        )
+        
+        return Response(
+            pdf_bytes,
+            mimetype='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename={filename}'
+            }
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 
