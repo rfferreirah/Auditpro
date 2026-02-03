@@ -429,13 +429,14 @@ Eventos Disponíveis: [{', '.join(event_list[:100])}]
         {{
             "name": "Nome curto e descritivo da regra",
             "field": "nome_do_campo_snake_case (se 'todo o projeto', use '_ALL_')",
-            "rule_type": "comparison" | "range" | "regex" | "condition" | "uniqueness" | "cross_event",
-            "operator": "=" | "!=" | ">" | "<" | ">=" | "<=" | "between" | "matches" | "contains" | "unique" | "empty" | "not_empty" | "present_implies",
+            "rule_type": "comparison" | "range" | "regex" | "condition" | "uniqueness" | "cross_event" | "cross_event_all",
+            "operator": "=" | "!=" | ">" | "<" | ">=" | "<=" | "between" | "matches" | "contains" | "unique" | "empty" | "not_empty" | "present_implies" | "consistent",
             "value": "valor da regra (para cross_event, é o nome do segundo campo)",
             "priority": "Alta" | "Média" | "Baixa",
             "message": "Mensagem de erro amigável pro usuário",
             "event1": "Nome do evento do primeiro campo (opcional, só para cross_event)",
-            "event2": "Nome do evento do segundo campo (opcional, só para cross_event)"
+            "event2": "Nome do evento do segundo campo (opcional, só para cross_event)",
+            "check_all_events": true | false (se deve verificar em TODOS os eventos disponíveis)
         }}
         
         BIBLIOTECA DE PADRÕES INTELIGENTES:
@@ -448,8 +449,44 @@ Eventos Disponíveis: [{', '.join(event_list[:100])}]
            - "Data de inclusão deve ser anterior a hoje" -> operator "<", value "_TODAY_"
            - "Data deve ser hoje ou futuro" -> operator ">=", value "_TODAY_"
            Use o token especial "_TODAY_" sempre que a regra mencionar "hoje", "futuro", "passado" ou "data atual".
+        
+        5. VERIFICAÇÃO EM TODOS OS EVENTOS (All Events):
+           Quando o usuário mencionar:
+           - "em todos os eventos"
+           - "todos os eventos" 
+           - "em cada evento"
+           - "em qualquer evento"
+           - "verificar em todos eventos"
            
-        5. CROSS-EVENT (Entre Visitas):
+           Use: "check_all_events": true
+           
+           Exemplo:
+           - User: "O BMI deve ser menor que 30 em todos os eventos"
+           - JSON: {{
+               "name": "BMI < 30 em todos os eventos",
+               "field": "bmi",
+               "rule_type": "comparison",
+               "operator": "<",
+               "value": "30",
+               "priority": "Alta",
+               "message": "BMI acima do limite em algum evento",
+               "check_all_events": true
+             }}
+             
+           - User: "A pressão arterial deve estar entre 90 e 140 em todos os eventos"
+           - JSON: {{
+               "name": "PA normal em todos eventos",
+               "field": "blood_pressure",
+               "rule_type": "range",
+               "operator": "between",
+               "value": "90,140",
+               "priority": "Média",
+               "message": "Pressão arterial fora do range em algum evento",
+               "check_all_events": true
+             }}
+           
+        6. CROSS-EVENT ESPECÍFICO (Entre 2 Visitas):
+           Quando o usuário especificar DOIS eventos distintos para comparação:
            - "O peso na Semana 4 deve ser menor que na Triagem"
            - JSON: {{
                "name": "Peso Semana 4 < Triagem",
@@ -462,6 +499,27 @@ Eventos Disponíveis: [{', '.join(event_list[:100])}]
                "priority": "Média",
                "message": "Perda de peso esperada não observada"
              }}
+             
+        7. CONSISTÊNCIA ENTRE TODOS OS EVENTOS:
+           Quando o usuário quiser verificar se um campo é CONSISTENTE/IGUAL em todos os eventos:
+           - "O sexo deve ser consistente em todos os eventos"
+           - "O nome deve ser igual em todos os eventos"
+           - "outros eventos" (quando compara com demais eventos)
+           
+           Use: rule_type="cross_event_all", operator="consistent"
+           
+           Exemplo:
+           - User: "O sexo deve ser o mesmo em todos os eventos"
+           - JSON: {{
+               "name": "Sexo consistente entre eventos",
+               "field": "sex",
+               "rule_type": "cross_event_all",
+               "operator": "consistent",
+               "value": "",
+               "priority": "Alta",
+               "message": "Valor de sexo diverge entre eventos",
+               "check_all_events": true
+             }}
            
         Exemplos Avançados:
         
@@ -473,6 +531,12 @@ Eventos Disponíveis: [{', '.join(event_list[:100])}]
         
         User: "No evento Follow-up, o status deve ser Completo"
         JSON: {{"name": "Status em Follow-up", "field": "status", "rule_type": "comparison", "operator": "=", "value": "Completo", "event1": "follow_up_arm_1", "priority": "Média", "message": "Status incorreto no Follow-up"}}
+        
+        User: "A hemoglobina deve ser maior que 10 em todos os eventos"
+        JSON: {{"name": "Hemoglobina > 10 em todos eventos", "field": "hemoglobin", "rule_type": "comparison", "operator": ">", "value": "10", "priority": "Alta", "message": "Hemoglobina abaixo do limite em algum evento", "check_all_events": true}}
+        
+        User: "O peso deve ser igual em outros eventos"
+        JSON: {{"name": "Peso consistente entre eventos", "field": "weight", "rule_type": "cross_event_all", "operator": "consistent", "value": "", "priority": "Média", "message": "Peso diverge entre eventos", "check_all_events": true}}
         """
         
         full_system_message = system_intro + context_str + schema_def
