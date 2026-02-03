@@ -28,7 +28,7 @@ class AuditLogsPDFGenerator:
     Gerador de PDF para logs de auditoria do REDCap.
     """
     
-    def __init__( 
+    def __init__(
         self, 
         logs: list[dict], 
         project_name: str = "Projeto REDCap",
