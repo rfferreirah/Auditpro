@@ -771,10 +771,24 @@ def ai_analysis():
 def download_pdf():
     """Download do relatório em PDF."""
     user_id = session.get('user_id')
+    
+    # Log para diagnóstico
+    print(f"DEBUG download_pdf: user_id={user_id}, session keys={list(session.keys())}", flush=True)
+    
     ctx = get_analysis_context(user_id)
     
-    if not ctx or not ctx['report']:
-        return jsonify({'error': 'Nenhuma análise disponível'}), 400
+    # Log do contexto
+    print(f"DEBUG download_pdf: ctx exists={ctx is not None}, has report={ctx.get('report') is not None if ctx else False}", flush=True)
+    
+    if not ctx or not ctx.get('report'):
+        error_msg = 'Nenhuma análise disponível. '
+        if not user_id:
+            error_msg += 'Sessão expirada - faça login novamente e execute uma nova análise.'
+        elif not ctx:
+            error_msg += 'A sessão foi perdida entre requisições. Por favor, execute uma nova análise.'
+        else:
+            error_msg += 'Execute uma análise primeiro antes de baixar o PDF.'
+        return jsonify({'error': error_msg}), 400
     
     try:
         pdf_gen = PDFReportGenerator(
