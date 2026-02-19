@@ -1206,7 +1206,21 @@ def generate_rule():
         
         ai = AIAnalyzer()
         if not ai.is_available:
-             return jsonify({'success': False, 'error': 'IA não configurada no servidor (API Key ausente).'}), 503
+             import src.ai_analyzer
+             lc_status = getattr(src.ai_analyzer, 'LANGCHAIN_AVAILABLE', 'Unknown')
+             provider = getattr(ai, 'provider', 'Unknown')
+             # Check specific key based on provider
+             has_key = False
+             if provider == 'openrouter':
+                 has_key = bool(config.OPENROUTER_API_KEY)
+             elif provider == 'openai':
+                 has_key = bool(config.OPENAI_API_KEY)
+             elif provider == 'gemini':
+                 has_key = bool(config.GOOGLE_API_KEY)
+                 
+             error_msg = f'IA Error: Provider={provider}, LangChain={lc_status}, KeyPresent={has_key}'
+             print(f"DEBUG AI ERROR: {error_msg}")
+             return jsonify({'success': False, 'error': error_msg}), 503
         
         # Passa ambos os contextos
         result = ai.parse_natural_language_rule(text, project_fields, project_events)
