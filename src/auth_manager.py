@@ -25,11 +25,14 @@ class AuthManager:
             return None
             
         try:
+            options = {}
+            app_url = os.getenv('SUPABASE_APP_URL')
+            if app_url:
+                options["redirect_to"] = f"{app_url}/auth/callback"
+            
             res = self.client.auth.sign_in_with_oauth({
                 "provider": provider,
-                "options": {
-                    "redirect_to": f"{os.getenv('SUPABASE_APP_URL', 'https://auditpro-0q8m.onrender.com')}/auth/callback"
-                }
+                "options": options
             })
             return res.url
         except Exception as e:
@@ -104,12 +107,14 @@ class AuthManager:
             if role_outro:
                 user_metadata['role_outro'] = role_outro
             
+            app_url = os.getenv('SUPABASE_APP_URL', 'http://localhost:5000')
+            
             response = self.client.auth.sign_up({
                 "email": email,
                 "password": password,
                 "options": {
                     "data": user_metadata,
-                    "email_redirect_to": "http://localhost:5000/auth/confirm"
+                    "email_redirect_to": f"{app_url}/auth/confirm"
                 }
             })
             
