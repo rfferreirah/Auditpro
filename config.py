@@ -20,6 +20,8 @@ REDCAP_TIMEOUT = int(os.getenv("REDCAP_TIMEOUT", "120"))
 AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").lower() # 'anthropic', 'openai' or 'gemini'
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+AI_MODEL = os.getenv("AI_MODEL", "google/gemini-2.0-flash-001") # Default model for OpenRouter
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 
 # === Authentication Configuration ===

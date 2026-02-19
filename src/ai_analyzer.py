@@ -67,6 +67,17 @@ class AIAnalyzer:
                     temperature=0.3,
                     max_tokens=4096,
                 )
+        elif self.provider == "openrouter" and LANGCHAIN_AVAILABLE:
+            key = api_key or config.OPENROUTER_API_KEY
+            model = config.AI_MODEL
+            if key:
+                self.llm = ChatOpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=key,
+                    model=model,
+                    temperature=0.3,
+                    max_tokens=4096,
+                )
         elif self.provider == "gemini" and GOOGLE_GENAI_AVAILABLE:
             key = api_key or config.GOOGLE_API_KEY
             if key:
