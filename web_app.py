@@ -1365,53 +1365,7 @@ def toggle_rule(rule_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/rules/generate', methods=['POST'])
-def generate_rule_from_text():
-    """Gera uma regra a partir de texto usando IA."""
-    print("DEBUG: Received request for /api/rules/generate")
-    try:
-        data = request.get_json()
-        print(f"DEBUG: Request payload: {data}")
-        text = data.get('text', '').strip()
-        
-        if not text:
-            return jsonify({'success': False, 'error': 'Texto da regra é obrigatório'}), 400
-            
 
-            
-        print("DEBUG: Initializing AIAnalyzer")
-        ai = AIAnalyzer()
-        
-        # Get field context from user cache
-        user_id = session.get('user_id')
-        ctx = get_analysis_context(user_id)
-        field_list = ctx.get('field_names') if ctx else []
-        
-        # Lazy load if missing but client exists
-        client = ctx.get('client') if ctx else None
-        
-        if not field_list and client:
-            try:
-                print("DEBUG: Lazy loading metadata for AI context...")
-                metadata = client.export_metadata()
-                field_list = [f.field_name for f in metadata]
-                if ctx:
-                    ctx['field_names'] = field_list
-                    update_analysis_context(user_id, {'field_names': field_list})
-                print(f"DEBUG: Loaded {len(field_list)} fields")
-            except Exception as e:
-                print(f"DEBUG: Failed to lazy load metadata: {e}")
-        
-        print(f"DEBUG: Parsing rule: {text} with {len(field_list) if field_list else 0} context fields")
-        result = ai.parse_natural_language_rule(text, field_list=field_list)
-        print(f"DEBUG: AI Result: {result}")
-        
-        return jsonify(result)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"DEBUG: Exception: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/api/fields', methods=['GET'])
